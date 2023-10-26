@@ -1,10 +1,13 @@
 from docx import Document
 
-doc = Document('/Users/aleksejdegtarev/Desktop/ecp/2.docx')
+doc = Document('/Users/aleksejdegtarev/Desktop/ecp/3.docx')
 
 text = []
 for i in doc.paragraphs:
     text.append(i.text)
+
+text_output = ' '.join(text[2:])
+
 date_start = text[4].split('\n')[1].split(': ')[1].strip()
 time_start = text[4].split('\n')[2].split(': ')[1].strip()
 
@@ -16,7 +19,6 @@ all_days = text[5].split('\n')[3].split(': ')[1].strip()
 # diagnosis_mkb = text[8].split(' \n')[0].split(': ')[1].split()[0]
 
 all_tables = doc.tables
-
 data_tables = {i: None for i in range(len(all_tables))}
 
 for i, table in enumerate(all_tables):

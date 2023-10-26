@@ -231,12 +231,12 @@ def save_EVN(
         ('EvnPS_setDate', f'{date_start}'),
         ('EvnPS_setTime', f'{time_start}'),
         ('EvnPS_IsWithoutDirection', '1'),
-        ('PrehospDirect_id', ''),
-        ('Org_did', ''),
+        ('PrehospDirect_id', ''), # при плановой госпитализации значение "2" означает другая МО
+        ('Org_did', ''), # "Org_id"
         ('MedStaffFact_did', ''),
         ('MedStaffFact_TFOMSCode', ''),
-        ('EvnDirection_Num', ''),
-        ('EvnDirection_setDate', ''),
+        ('EvnDirection_Num', ''), # номер направления при плановой госпитализации
+        ('EvnDirection_setDate', ''), # дата выдачи направления
         ('PrehospArrive_id', '1'),
         ('CmpCallCard_id', ''),
         ('Diag_did', ''),
@@ -252,7 +252,7 @@ def save_EVN(
         ('EvnPS_IsWrongCure', '1'),
         ('EvnPS_IsDiagMismatch', '1'),
         ('LpuSectionTransType_id', ''),
-        ('PrehospType_id', '1'),
+        ('PrehospType_id', '1'), # значение 2 при плановой
         ('EvnPS_HospCount', ''),
         ('Okei_id', '100'),
         ('EvnPS_TimeDesease', ''),
@@ -756,7 +756,47 @@ def get_KSG_KOEF(connect, date_start: str, date_end: str, patient_id: str, diagn
     return response.json()
 
 
-def update_evn_template(connect, text):
+def create_template(connect, person_evn_id):
+    """Создаёт пустой шаблон выписки"""
+    headers = {
+        'authority': 'ecp38.is-mis.ru',
+        'accept': '*/*',
+        'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
+        'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'dnt': '1',
+        'origin': 'https://ecp38.is-mis.ru',
+        'referer': 'https://ecp38.is-mis.ru/?c=promed',
+        'sec-ch-ua': '"Chromium";v="118", "Google Chrome";v="118", "Not=A?Brand";v="99"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"macOS"',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-origin',
+        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36',
+        'x-kl-kav-ajax-request': 'Ajax_Request',
+        'x-requested-with': 'XMLHttpRequest',
+    }
+
+    params = {
+        'c': 'EvnXml',
+        'm': 'createEmpty',
+    }
+
+    data = {
+        'itemSectionCode': 'EvnXmlEpikriz',
+        'Evn_id': f'{person_evn_id}',
+        'XmlTemplate_id': '380101000385273',
+        'XmlType_id': '10',
+        'isSelect': 'true',
+        'MedStaffFact_id': '380101000010385',
+        'Server_id': '0',
+    }
+
+    response = connect.post('https://ecp38.is-mis.ru/', params=params, headers=headers, data=data)
+    return response.json()
+
+
+def update_evn_template(connect, template_id, text):
     """Обновляет (добавляет) текст выписки через параметр value запроса"""
 
     headers = {
@@ -783,7 +823,7 @@ def update_evn_template(connect, text):
         'm': 'updateContent',
     }
 
-    data = f'EvnXml_id=380101021124625&name=autoname1&value={text}data-mce-bogus%3D%221%22%3E%3C%2Fp%3E&isHTML=1'
+    data = f'EvnXml_id={template_id}&name=autoname1&value={text}data-mce-bogus%3D%221%22%3E%3C%2Fp%3E&isHTML=1'
 
     response = connect.post('https://ecp38.is-mis.ru/', params=params, headers=headers, data=data)
     return response.status_code

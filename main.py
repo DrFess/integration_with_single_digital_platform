@@ -1,7 +1,6 @@
 import requests
 
-from extract_document import name, surname, patronymic, birthday, date_start, date_end, time_start, time_end, \
-    diagnosis_mkb
+from extract_document import name, surname, patronymic, birthday, date_start, date_end, time_start, time_end
 from settings import login, password
 from single_digital_platform import entry, search_patient, get_KSG_KOEF, get_evn_number, save_EVN, save_data, mkb
 
@@ -12,9 +11,10 @@ first_step = entry(session, login=login, password=password)
 second_step = search_patient(session, name=name, surname=surname, patronymic=patronymic, birthday=birthday)
 
 patient = second_step['data'][0]['Person_id']
-diagnosis = mkb(session, letter=diagnosis_mkb)
-third_step = get_KSG_KOEF(session, date_start=date_start, date_end=date_end, patient_id=patient, diagnosis_id=diagnosis)
 
+letter = '' # код по мкб, парсить из выписки криво, можно напрямую забирать
+diagnosis_id = mkb(session, letter=letter)[0]['Diag_id']
+third_step = get_KSG_KOEF(session, date_start=date_start, date_end=date_end, patient_id=patient, diagnosis_id=diagnosis_id)
 evn_number = get_evn_number(session)
 
 evn_card = save_EVN(

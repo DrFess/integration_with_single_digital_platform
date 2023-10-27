@@ -22,8 +22,9 @@ from single_digital_platform import (
     mkb,
     update_evn_template, create_template
 )
-
+proxies={'https': 'https://192.168.35.199:3128'}
 session = requests.Session()
+session.proxies.update(proxies)
 
 first_step = entry(session, login=login, password=password)
 

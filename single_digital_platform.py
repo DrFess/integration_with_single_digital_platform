@@ -1,4 +1,5 @@
 from datetime import datetime
+from fake_useragent import FakeUserAgent
 
 
 def calculate_date(start_date: str, end_date: str) -> int:
@@ -12,21 +13,7 @@ def entry(connect, login: str, password: str):
     """Запрос авторизации с логином и паролем"""
 
     headers_enter = {
-        'authority': 'ecp38.is-mis.ru',
-        'accept': '*/*',
-        'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
-        'content-type': 'application/x-www-form-urlencoded',
-        'dnt': '1',
-        'origin': 'https://ecp38.is-mis.ru',
-        'referer': 'https://ecp38.is-mis.ru/?c=portal&m=udp',
-        'sec-ch-ua': '"Chromium";v="118", "Google Chrome";v="118", "Not=A?Brand";v="99"',
-        'sec-ch-ua-mobile': '?0',
-        'sec-ch-ua-platform': '"macOS"',
-        'sec-fetch-dest': 'empty',
-        'sec-fetch-mode': 'cors',
-        'sec-fetch-site': 'same-origin',
-        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36',
-        'x-requested-with': 'XMLHttpRequest',
+        'user-agent': FakeUserAgent().random
     }
 
     params = {
@@ -45,12 +32,18 @@ def entry(connect, login: str, password: str):
 
     response = connect.post('https://ecp38.is-mis.ru/', params=params, headers=headers_enter, data=data)
 
-    return response.status_code
+    return response.json()
 
 
 def search_patient(connect, name: str, surname: str, patronymic: str, birthday: str):
     """Поиск пациента по ФИО и дате рождения"""
-
+    cookies = {
+        'PHPSESSID': 'b43t96vsenl1cpv7lhsd012eok',
+        'login': 'daa87',
+        'JSESSIONID': '04C9F0F7FAA91C6C5154715912A4634C',
+        'io': 'QsKHK9VMafq1m8duIaQn',
+        'route': 'fe42fc636f21d1f07b80fac323b5cf3f',
+    }
     headers_search = {
         'authority': 'ecp38.is-mis.ru',
         'accept': '*/*',
@@ -65,7 +58,7 @@ def search_patient(connect, name: str, surname: str, patronymic: str, birthday: 
         'sec-fetch-dest': 'empty',
         'sec-fetch-mode': 'cors',
         'sec-fetch-site': 'same-origin',
-        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36',
+        'user-agent': FakeUserAgent().random,
         'x-requested-with': 'XMLHttpRequest',
     }
     params_search = {
@@ -74,11 +67,11 @@ def search_patient(connect, name: str, surname: str, patronymic: str, birthday: 
     }
 
     data_search = {
-        'PersonSurName_SurName': f'{surname}',
+        'PersonSurName_SurName': surname,
         'ParentARM': '',
-        'PersonFirName_FirName': f'{name}',
-        'PersonSecName_SecName': f'{patronymic}',
-        'PersonBirthDay_BirthDay': f'{birthday}',
+        'PersonFirName_FirName': name,
+        'PersonSecName_SecName': patronymic,
+        'PersonBirthDay_BirthDay': birthday,
         'PersonAge_AgeFrom': '',
         'PersonAge_AgeTo': '',
         'PersonBirthYearFrom': '',
@@ -101,7 +94,7 @@ def search_patient(connect, name: str, surname: str, patronymic: str, birthday: 
         'isTfoms': '0',
     }
 
-    response_search = connect.post('https://ecp38.is-mis.ru/', params=params_search, headers=headers_search,
+    response_search = connect.post('https://ecp38.is-mis.ru/', params=params_search, cookies=cookies, headers=headers_search,
                                    data=data_search)
     return response_search.json()
 
@@ -358,7 +351,8 @@ def save_data(
         time_end: str,
         ksg_coeff: str,
         evn_section_id: str,
-        evn_section_pid: str
+        evn_section_pid: str,
+        diag_id
 ):
     """Сохраняет данные выписки и переводит пациенты в выписанных"""
     headers = {
@@ -494,7 +488,7 @@ def save_data(
         ('PolisDMS_id', ''),
         ('TariffClass_id', ''),
         ('MedStaffFact_id', '380101000010385'),  # Дегтярев ID
-        ('Diag_id', '6991'),
+        ('Diag_id', f'{diag_id}'),
         ('HeartFailureStage_54', ''),
         ('HeartFailureClass_55', ''),
         ('StenocardiaFuncClass_id', ''),
@@ -785,7 +779,7 @@ def create_template(connect, person_evn_id):
     data = {
         'itemSectionCode': 'EvnXmlEpikriz',
         'Evn_id': f'{person_evn_id}',
-        'XmlTemplate_id': '380101000385273',
+        'XmlTemplate_id': '380101000412244',
         'XmlType_id': '10',
         'isSelect': 'true',
         'MedStaffFact_id': '380101000010385',
@@ -796,34 +790,150 @@ def create_template(connect, person_evn_id):
     return response.json()
 
 
-def update_evn_template(connect, template_id, text):
-    """Обновляет (добавляет) текст выписки через параметр value запроса"""
+def update_research_evn_template(connect, template_id, text):
+    """Заполняет поле обследование в выписке"""
 
     headers = {
         'authority': 'ecp38.is-mis.ru',
         'accept': '*/*',
         'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
         'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
-            'dnt': '1',
-            'origin': 'https://ecp38.is-mis.ru',
-            'referer': 'https://ecp38.is-mis.ru/?c=promed',
-            'sec-ch-ua': '"Chromium";v="118", "Google Chrome";v="118", "Not=A?Brand";v="99"',
-            'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-platform': '"macOS"',
-            'sec-fetch-dest': 'empty',
-            'sec-fetch-mode': 'cors',
-            'sec-fetch-site': 'same-origin',
-            'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36',
-            'x-kl-kav-ajax-request': 'Ajax_Request',
-            'x-requested-with': 'XMLHttpRequest',
-        }
+        'dnt': '1',
+        'origin': 'https://ecp38.is-mis.ru',
+        'referer': 'https://ecp38.is-mis.ru/?c=promed',
+        'sec-ch-ua': '"Chromium";v="118", "Google Chrome";v="118", "Not=A?Brand";v="99"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"macOS"',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-origin',
+        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36',
+        'x-requested-with': 'XMLHttpRequest',
+    }
 
     params = {
         'c': 'EvnXml',
         'm': 'updateContent',
     }
 
-    data = f'EvnXml_id={template_id}&name=autoname1&value={text}data-mce-bogus%3D%221%22%3E%3C%2Fp%3E&isHTML=1'
+    data = {
+        'EvnXml_id': f'{template_id}',
+        'name': 'autoname31',
+        'value': f'<p><br>5. Результаты проведенного исследования: {text}</p>',
+        'isHTML': '1',
+    }
+
+    response = connect.post('https://ecp38.is-mis.ru/', params=params, headers=headers, data=data)
+    return response.status_code
+
+
+def update_treatment_evn_template(connect, template_id, text):
+    """Заполняет поле лечение в выписке"""
+
+    headers = {
+        'authority': 'ecp38.is-mis.ru',
+        'accept': '*/*',
+        'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
+        'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'dnt': '1',
+        'origin': 'https://ecp38.is-mis.ru',
+        'referer': 'https://ecp38.is-mis.ru/?c=promed',
+        'sec-ch-ua': '"Chromium";v="118", "Google Chrome";v="118", "Not=A?Brand";v="99"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"macOS"',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-origin',
+        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36',
+        'x-requested-with': 'XMLHttpRequest',
+    }
+
+    params = {
+        'c': 'EvnXml',
+        'm': 'updateContent',
+    }
+
+    data = {
+        'EvnXml_id': f'{template_id}',
+        'name': 'autoname91',
+        'value': f'<p><br>6. Проведенное лечение и его эффективность: {text}</p>',
+        'isHTML': '1',
+    }
+
+    response = connect.post('https://ecp38.is-mis.ru/', params=params, headers=headers, data=data)
+    return response.status_code
+
+
+def update_recommendation_evn_template(connect, template_id, text):
+    """Заполняет поле рекомендации в выписке"""
+
+    headers = {
+        'authority': 'ecp38.is-mis.ru',
+        'accept': '*/*',
+        'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
+        'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'dnt': '1',
+        'origin': 'https://ecp38.is-mis.ru',
+        'referer': 'https://ecp38.is-mis.ru/?c=promed',
+        'sec-ch-ua': '"Chromium";v="118", "Google Chrome";v="118", "Not=A?Brand";v="99"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"macOS"',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-origin',
+        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36',
+        'x-requested-with': 'XMLHttpRequest',
+    }
+
+    params = {
+        'c': 'EvnXml',
+        'm': 'updateContent',
+    }
+
+    data = {
+        'EvnXml_id': f'{template_id}',
+        'name': 'autoname96',
+        'value': f'<p><br>7. Рекомендации: {text}</p>',
+        'isHTML': '1',
+    }
+
+    response = connect.post('https://ecp38.is-mis.ru/', params=params, headers=headers, data=data)
+    return response.status_code
+
+
+def create_certificate(connect): # разобрать
+    """Создаёт сертификат для подписи"""
+    headers = {
+        'authority': 'ecp38.is-mis.ru',
+        'accept': '*/*',
+        'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
+        'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'dnt': '1',
+        'origin': 'https://ecp38.is-mis.ru',
+        'referer': 'https://ecp38.is-mis.ru/?c=promed',
+        'sec-ch-ua': '"Chromium";v="118", "Google Chrome";v="118", "Not=A?Brand";v="99"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"macOS"',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-origin',
+        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36',
+        'x-requested-with': 'XMLHttpRequest',
+    }
+
+    params = {
+        'c': 'EMD',
+        'm': 'generateEMDRegistry',
+    }
+
+    data = {
+        'EMDRegistry_ObjectName': 'EvnXml',
+        'EMDRegistry_ObjectID': '380101022087844',
+        'MedStaffFact_id': '380101000010385',
+        'EMDCertificate_id': '11908',
+        'isDocArray': 'false',
+        'isPreview': '',
+    }
 
     response = connect.post('https://ecp38.is-mis.ru/', params=params, headers=headers, data=data)
     return response.status_code

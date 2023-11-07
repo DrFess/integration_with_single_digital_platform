@@ -901,6 +901,92 @@ def update_recommendation_evn_template(connect, template_id, text):
     return response.status_code
 
 
+def get_EMD_data(connect):
+    """Пока не понятное что-то для электронной подписи"""
+    headers = {
+        'authority': 'ecp38.is-mis.ru',
+        'accept': '*/*',
+        'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
+        'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'dnt': '1',
+        'origin': 'https://ecp38.is-mis.ru',
+        'referer': 'https://ecp38.is-mis.ru/?c=promed',
+        'sec-ch-ua': '"Google Chrome";v="119", "Chromium";v="119", "Not?A_Brand";v="24"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"macOS"',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-origin',
+        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
+        'x-kl-kav-ajax-request': 'Ajax_Request',
+        'x-requested-with': 'XMLHttpRequest',
+    }
+
+    params = {
+        'c': 'EMD',
+        'm': 'loadEMDSignWindow',
+        '_dc': '1699334062413',
+    }
+
+    data = {
+        'EMDRegistry_Objects': 'false',
+        'EMDRegistry_ObjectName': 'EvnXml',
+        'EMDRegistry_ObjectIDs': '["380101021673847"]',
+        'isMOSign': 'false',
+        'isDocArray': 'false',
+        'isMedikata': 'false',
+        'MedService_id': '',
+        'page': '1',
+        'start': '0',
+        'limit': '25',
+    }
+
+    response = connect.post('https://ecp38.is-mis.ru/', params=params, headers=headers, data=data)
+    return response.json()
+
+
+def get_EMD_list(connect):
+    """Получает данные для подписи"""
+
+    headers = {
+        'authority': 'ecp38.is-mis.ru',
+        'accept': '*/*',
+        'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
+        'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'dnt': '1',
+        'origin': 'https://ecp38.is-mis.ru',
+        'referer': 'https://ecp38.is-mis.ru/?c=promed',
+        'sec-ch-ua': '"Google Chrome";v="119", "Chromium";v="119", "Not?A_Brand";v="24"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"macOS"',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-origin',
+        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
+        'x-kl-kav-ajax-request': 'Ajax_Request',
+        'x-requested-with': 'XMLHttpRequest',
+    }
+
+    params = {
+        'c': 'EMD',
+        'm': 'loadEMDCertificateList',
+        '_dc': '1699334062689',
+    }
+
+    data = {
+        'excludeExpire': 'true',
+        'excludeIsNotUse': 'true',
+        'pmUser_id': '418031072342',
+        'isMOSign': '',
+        'page': '1',
+        'start': '0',
+        'limit': '25',
+    }
+
+    response = connect.post('https://ecp38.is-mis.ru/', params=params, headers=headers, data=data)
+    return response.json()
+
+
 def create_certificate(connect): # разобрать
     """Создаёт сертификат для подписи"""
     headers = {

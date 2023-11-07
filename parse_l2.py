@@ -160,7 +160,7 @@ def get_history_content(connect, number):
 authorization_l2(session, login_l2, password_l2)
 all_discharged_patients = get_all_favorites(session)['data'] # direction - история болезни, client - ФИО и дата рождения
 # get_initial_examination(session) # pk - номер направления
-# discharged = get_patients_from_table('P3:P42') # список выписанных номеров историй
+# all_discharged_patients = get_patients_from_table('P3:P42') # список выписанных номеров историй
 
 
 for elem in all_discharged_patients:

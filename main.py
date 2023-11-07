@@ -3,7 +3,7 @@ import json
 import requests
 
 
-from settings import login, password, proxies
+from settings import proxies
 from single_digital_platform import (
     entry,
     search_patient,
@@ -16,13 +16,22 @@ from single_digital_platform import (
     update_treatment_evn_template,
     update_recommendation_evn_template
 )
+
+
+with open('doctors.json', 'r') as file:
+    doctors = json.load(file)
+
 session = requests.Session()
 session.proxies.update(proxies)
 
-authorization = entry(session, login=login, password=password)
-
 with open('patients/Юрошева.json', 'r') as file:
     data = json.load(file)
+
+doctor = data['doc']
+login = doctors['doctor']['login']
+password = doctors['doctor']['password']
+
+authorization = entry(session, login=login, password=password)
 
 search = search_patient(
     session,

@@ -1,5 +1,9 @@
 from datetime import datetime
+
+import requests
 from fake_useragent import FakeUserAgent
+
+from settings import proxies
 
 
 def calculate_date(start_date: str, end_date: str) -> int:
@@ -37,13 +41,7 @@ def entry(connect, login: str, password: str):
 
 def search_patient(connect, name: str, surname: str, patronymic: str, birthday: str):
     """Поиск пациента по ФИО и дате рождения"""
-    cookies = {
-        'PHPSESSID': 'b43t96vsenl1cpv7lhsd012eok',
-        'login': 'daa87',
-        'JSESSIONID': '04C9F0F7FAA91C6C5154715912A4634C',
-        'io': 'QsKHK9VMafq1m8duIaQn',
-        'route': 'fe42fc636f21d1f07b80fac323b5cf3f',
-    }
+
     headers_search = {
         'authority': 'ecp38.is-mis.ru',
         'accept': '*/*',
@@ -94,7 +92,7 @@ def search_patient(connect, name: str, surname: str, patronymic: str, birthday: 
         'isTfoms': '0',
     }
 
-    response_search = connect.post('https://ecp38.is-mis.ru/', params=params_search, cookies=cookies, headers=headers_search,
+    response_search = connect.post('https://ecp38.is-mis.ru/', params=params_search, headers=headers_search,
                                    data=data_search)
     return response_search.json()
 
@@ -127,7 +125,7 @@ def get_evn_number(connect):
     }
 
     data = {
-        'year': '2023',
+        'year': '2024',
     }
 
     response = connect.post('https://ecp38.is-mis.ru/', params=params, headers=headers, data=data)
@@ -142,6 +140,13 @@ def save_EVN(
         numcard: str,
         date_start: str,
         time_start: str,
+        type_hospitalization: str,
+        date_of_referral: str,
+        number_of_referral: str,
+        other_hosp: str,
+        org_id: str,
+        med_personal_id: str,
+        med_staff_fact_id: str
 ):
     """Создаёт карту выбывшего из стационара"""
     headers = {
@@ -175,8 +180,8 @@ def save_EVN(
         ('Diag_eid', ''),
         ('addEvnSection', '1'),
         ('LpuSection_id', '380101000006029'),
-        ('MedPersonal_id', '380101000004549'),
-        ('MedStaffFact_id', '380101000010385'),
+        ('MedPersonal_id', med_personal_id),
+        ('MedStaffFact_id', med_staff_fact_id),
         ('isAutoCreate', '1'),
         ('vizit_direction_control_check', '0'),
         ('ignoreParentEvnDateCheck', '0'),
@@ -224,12 +229,12 @@ def save_EVN(
         ('EvnPS_setDate', f'{date_start}'),
         ('EvnPS_setTime', f'{time_start}'),
         ('EvnPS_IsWithoutDirection', '1'),
-        ('PrehospDirect_id', ''), # при плановой госпитализации значение "2" означает другая МО
-        ('Org_did', ''), # "Org_id"
+        ('PrehospDirect_id', other_hosp), # при плановой госпитализации значение "2" означает другая МО
+        ('Org_did', org_id), # "Org_id"
         ('MedStaffFact_did', ''),
         ('MedStaffFact_TFOMSCode', ''),
-        ('EvnDirection_Num', ''), # номер направления при плановой госпитализации
-        ('EvnDirection_setDate', ''), # дата выдачи направления
+        ('EvnDirection_Num', number_of_referral), # номер направления при плановой госпитализации
+        ('EvnDirection_setDate', date_of_referral), # дата выдачи направления
         ('PrehospArrive_id', '1'),
         ('CmpCallCard_id', ''),
         ('Diag_did', ''),
@@ -245,7 +250,7 @@ def save_EVN(
         ('EvnPS_IsWrongCure', '1'),
         ('EvnPS_IsDiagMismatch', '1'),
         ('LpuSectionTransType_id', ''),
-        ('PrehospType_id', '1'), # значение 2 при плановой
+        ('PrehospType_id', type_hospitalization), # значение 2 при плановой
         ('EvnPS_HospCount', ''),
         ('Okei_id', '100'),
         ('EvnPS_TimeDesease', ''),
@@ -318,7 +323,7 @@ def save_EVN(
         ('ResearchObservEmergencyReason_id', ''),
         ('LpuSectionProfile_id', '380101000000301'),
         ('MedStaffFact_tid', ''),
-        ('MedStaffFact_sid', '380101000010385'),
+        ('MedStaffFact_sid', med_staff_fact_id),
         ('UslugaComplex_id', ''),
         ('ResultClass_id', ''),
         ('ResultDeseaseType_id', ''),
@@ -350,9 +355,11 @@ def save_data(
         time_start: str,
         time_end: str,
         ksg_coeff: str,
-        evn_section_id: str,
-        evn_section_pid: str,
-        diag_id
+        evn_section_id,
+        evn_section_pid,
+        diag_id,
+        med_staff_fact_id: str,
+        med_personal_id: str
 ):
     """Сохраняет данные выписки и переводит пациенты в выписанных"""
     headers = {
@@ -449,7 +456,7 @@ def save_data(
         ('EvnSection_IndexRepInReg', ''),
         ('MedPersonal_aid', '0'),
         ('MedPersonal_did', '0'),
-        ('MedPersonal_id', '380101000004549'),  # Дегтярев А.А.
+        ('MedPersonal_id', med_personal_id),
         ('Person_id', f'{patient_id}'),
         ('PersonEvn_id', f'{patient_person_evn_id}'),
         ('Server_id', f'{patient_server_id}'),
@@ -475,7 +482,7 @@ def save_data(
         ('LpuSectionTransType_id', ''),
         ('EvnSection_IsMeal', '1'),  # const
         ('LpuSectionProfile_id', '380101000000301'),  # id Травматологии и ортопедии
-        ('LpuSectionBedProfileLink_fedid', '380101000000438'),  # ??? скорее всего const
+        ('LpuSectionBedProfileLink_fedid', '380101000000438'),  # id профиля койки
         ('LpuSectionWard_id', ''),
         ('Bed_id', ''),
         ('NewLpuSectionBedProfile_id', ''),
@@ -487,7 +494,7 @@ def save_data(
         ('PayContract_id', ''),
         ('PolisDMS_id', ''),
         ('TariffClass_id', ''),
-        ('MedStaffFact_id', '380101000010385'),  # Дегтярев ID
+        ('MedStaffFact_id', med_staff_fact_id),  # Дегтярев ID
         ('Diag_id', f'{diag_id}'),
         ('HeartFailureStage_54', ''),
         ('HeartFailureClass_55', ''),
@@ -750,7 +757,7 @@ def get_KSG_KOEF(connect, date_start: str, date_end: str, patient_id: str, diagn
     return response.json()
 
 
-def create_template(connect, person_evn_id):
+def create_template(connect, person_evn_id, med_staff_fact_id):
     """Создаёт пустой шаблон выписки"""
     headers = {
         'authority': 'ecp38.is-mis.ru',
@@ -782,7 +789,7 @@ def create_template(connect, person_evn_id):
         'XmlTemplate_id': '380101000412244',
         'XmlType_id': '10',
         'isSelect': 'true',
-        'MedStaffFact_id': '380101000010385',
+        'MedStaffFact_id': med_staff_fact_id,
         'Server_id': '0',
     }
 
@@ -931,7 +938,7 @@ def get_EMD_data(connect):
     data = {
         'EMDRegistry_Objects': 'false',
         'EMDRegistry_ObjectName': 'EvnXml',
-        'EMDRegistry_ObjectIDs': '["380101021673847"]',
+        'EMDRegistry_ObjectIDs': '["380101021673847"]', # const
         'isMOSign': 'false',
         'isDocArray': 'false',
         'isMedikata': 'false',
@@ -987,7 +994,7 @@ def get_EMD_list(connect):
     return response.json()
 
 
-def create_certificate(connect): # разобрать
+def create_certificate(connect, med_staff_fact_id): # разобрать
     """Создаёт сертификат для подписи"""
     headers = {
         'authority': 'ecp38.is-mis.ru',
@@ -1015,7 +1022,7 @@ def create_certificate(connect): # разобрать
     data = {
         'EMDRegistry_ObjectName': 'EvnXml',
         'EMDRegistry_ObjectID': '380101022087844',
-        'MedStaffFact_id': '380101000010385',
+        'MedStaffFact_id': med_staff_fact_id,
         'EMDCertificate_id': '11908',
         'isDocArray': 'false',
         'isPreview': '',
@@ -1023,3 +1030,162 @@ def create_certificate(connect): # разобрать
 
     response = connect.post('https://ecp38.is-mis.ru/', params=params, headers=headers, data=data)
     return response.status_code
+
+
+def get_referral_for_hospitalization(connect,
+                                     beg_date: str,
+                                     end_date: str,
+                                     surname: str,
+                                     name: str,
+                                     patronymic: str):
+    """Возвращает направления на госпитализацию.
+    Можно забрать Diag_Code (код МКБ), Diag_Name (код МКБ с описанием), Diag_id (идентификатор кода МКБ из бд ЕЦП),
+    DirType_Name (тип госпитализации), DirType_id (идентификатор типа госпитализации в бд ЕЦП),
+    LpuSectionBedProfile_id (профиль койки "380101000000332"-травматология, указывается не всегда),
+    LpuSectionProfile_id (профиль отделения "380101000000301"-травматология),
+    EvnDirection_Descr (текст обоснования), EvnDirection_Num (номер обоснования(?))"""
+    headers = {
+        'accept': '*/*',
+        'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
+        'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'dnt': '1',
+        'origin': 'https://ecp38.is-mis.ru',
+        'referer': 'https://ecp38.is-mis.ru/?c=promed',
+        'sec-ch-ua': '"Google Chrome";v="123", "Not:A-Brand";v="8", "Chromium";v="123"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"macOS"',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-origin',
+        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
+        'x-requested-with': 'XMLHttpRequest',
+    }
+
+    params = {
+        'c': 'EvnDirection',
+        'm': 'loadEvnDirectionJournal',
+    }
+
+    data = {
+        'EvnDirection_id': '',
+        'Lpu_id': '',
+        'PayType_id': '',
+        'Lpu_Name': '',
+        'Org_Nick': '',
+        'Org_Name': '',
+        'Org_id': '',
+        'EvnDirection_Num': '',
+        'DirType_id': '1',
+        'DirType_Code': '',
+        'DirType_Name': '',
+        'DirFailType_Name': '',
+        'LpuSectionProfile_id': '380101000000301', # профиль "Травматология и ортопедия"
+        'LpuSectionProfile_Name': '',
+        'LpuSection_id': '380101000006029', # ID матрешки
+        'LpuSection_did': '',
+        'LpuSection_Name': '',
+        'EvnQueue_Days': '',
+        'EvnVK_id': '',
+        'LpuVK_did': '',
+        'EvnDirectionVK_id': '',
+        'SMEvnPrescrVK_id': '',
+        'HTMEvnPrescrVK_id': '',
+        'EvnDirectionHTMCount': '',
+        'EvnDirection_setDate': '',
+        'EvnDirection_setTime': '',
+        'TimetableStac_setDate': '',
+        'PrehospStatus_Name': '',
+        'EvnDirection_desDT': '',
+        'Person_id': '',
+        'PersonEvn_id': '',
+        'Server_id': '',
+        'Person_Fio': '',
+        'Person_Birthday': '',
+        'Diag_Name': '',
+        'EvnDirection_Descr': '',
+        'MedPersonal_id': '',
+        'MedPersonal_Fio': '',
+        'MedPersonalProfile_Name': '',
+        'IsWaitingVK': '',
+        'EvnStatusHistory_Cause': '',
+        'LeaveType_Name': '',
+        'EvnStatus_id': '',
+        'TalonHTM_id': '',
+        'EvnPrescrVkTalon_id': '',
+        'VkProtocol_id': '',
+        'CareStageType_id': '',
+        'TalonHTM_IsSigned': '',
+        'EvnDirectionHTM_id': '',
+        'object': 'EvnDirection',
+        'limit': '100',
+        'start': '0',
+        'beg_date': beg_date,
+        'end_date': end_date,
+        'Person_SurName': surname,
+        'Person_FirName': name,
+        'Person_SecName': patronymic,
+        'Lpu_isFmo': 'false',
+        'Lpu_isHtm': 'true',
+        'EvnStatusCause_id': '',
+    }
+
+    response = connect.post('https://ecp38.is-mis.ru/', params=params, headers=headers, data=data)
+    return response.json()
+
+
+def get_list_of_discharge_notes_for_signature(connect): # разобрать!!!
+    """Список не подписанных выписных"""
+
+    headers = {
+        'accept': '*/*',
+        'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
+        'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'dnt': '1',
+        'origin': 'https://ecp38.is-mis.ru',
+        'referer': 'https://ecp38.is-mis.ru/?c=promed',
+        'sec-ch-ua': '"Google Chrome";v="123", "Not:A-Brand";v="8", "Chromium";v="123"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"macOS"',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-origin',
+        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
+        'x-requested-with': 'XMLHttpRequest',
+    }
+
+    params = {
+        'c': 'EMDSignWin',
+        'm': 'searchDocs',
+        '_dc': '1711851258257', #???
+    }
+
+    data = {
+        'EMDDocumentTypeLocal_id': '100067',
+        'Lpu_id': '10379',
+        'EMDOrg_id': '10379',
+        'LpuBuilding_id': '380101000000122',
+        'LpuSection_id': '380101000006029',
+        'MedPersonal_id': '380101000004549',
+        'PersonWork_id': 'null',
+        'Evn_insDT_period': '',
+        'Evn_updDT_period': '',
+        'Doc_Num': '',
+        'Person_FIO': '',
+        'isWithoutSign': 'on',
+        'isNecessaryES': '1',
+        'hidedeletedoc': '1',
+        'page': '1',
+        'start': '0',
+        'limit': '100',
+    }
+
+    response = connect.post('https://ecp38.is-mis.ru/', params=params, headers=headers, data=data)
+    return response.json()
+
+
+# session = requests.Session()
+# session.proxies.update(proxies)
+#
+# authorization = entry(session, login='daa87', password='Daa026')
+# data = search_patient(session, 'Валерия', 'Малых', 'Владимировна', '01.04.2008')
+# print(data)

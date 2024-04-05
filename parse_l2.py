@@ -1,6 +1,7 @@
+from pprint import pprint
+
 import requests
 import json
-from datetime import datetime
 from settings import proxies, login_l2, password_l2
 
 import gspread
@@ -11,12 +12,11 @@ session.proxies.update(proxies)
 
 
 def get_patients_from_table(interval: str) -> list:
-    """Получение списка номеров выписанных историй из сводной гугл-таблице"""
+    """Получение списка номеров выписанных историй из сводной гугл-таблицы"""
     gs = gspread.service_account(filename='access.json')
     sh = gs.open_by_key('1feNhDOpE41gwPwuvtW_V5kZH2hFSt9qc8gZvmoH2UIE')
 
     worksheet = sh.get_worksheet_by_id(0)
-
     result = []
     for item in worksheet.get(interval):
         if len(item) > 0:
@@ -99,7 +99,7 @@ def get_all_pk_history(connect, number):
     return response.json()
 
 
-def get_initial_examination(connect):
+def get_initial_examination(connect, pk_researches: int):
     """Получение данных из первичного осмотра"""
     headers = {
         'Accept': 'application/json, text/plain, */*',
@@ -114,7 +114,7 @@ def get_initial_examination(connect):
     }
 
     json_data = {
-        'direction': 2350741, # забирать из get_all_favorites(connect)
+        'direction': pk_researches, # номер истории
         'r_type': 'primary receptions',
         'every': False,
     }
@@ -157,42 +157,133 @@ def get_history_content(connect, number):
     return response.json()
 
 
-authorization_l2(session, login_l2, password_l2)
-all_discharged_patients = get_all_favorites(session)['data'] # direction - история болезни, client - ФИО и дата рождения
-# get_initial_examination(session) # pk - номер направления
-# all_discharged_patients = get_patients_from_table('P3:P42') # список выписанных номеров историй
+def obtain_research_data(connect, pk_desc: int):
+
+    headers = {
+        'Accept': 'application/json, text/plain, */*',
+        'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Content-Type': 'application/json',
+        'DNT': '1',
+        'Origin': 'http://192.168.10.161',
+        'Proxy-Connection': 'keep-alive',
+        'Referer': 'http://192.168.10.161/ui/stationar',
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
+    }
+
+    json_data = {
+        'pk': pk_desc,
+        'force': True,
+    }
+
+    response = connect.post(
+        'http://192.168.10.161/api/directions/results',
+        headers=headers,
+        json=json_data,
+        verify=False,
+    )
+    return response.json()
 
 
-for elem in all_discharged_patients:
-    patient_data = {}
+def extract_patient_data_from_L2(history_number: int):
+    authorization_l2(session, login_l2, password_l2) # авторизация в L2
+    history = get_history_content(session, history_number) # все данные по истории болезни
+    directions = history.get('researches')[0].get('children_directions') # номера направлений всех записей в истории болезни
 
-    discharge_summary = get_all_pk_history(session, elem['direction'])['data'][0]['pk']
-    data = get_history_content(session, discharge_summary)
+    discharge_summary = {}
 
-    patient_data["surname"] = data['patient']['fio_age'].split()[0]
-    patient_data["name"] = data['patient']['fio_age'].split()[1]
-    patient_data["patronymic"] = data['patient']['fio_age'].split()[2]
-    patient_data["birthday"] = data['patient']['fio_age'].split()[4]
-    patient_data["doc"] = data['patient']['doc'].split()[0]
+    for direction in directions:
+        if direction.get('services') == ['Первичный осмотр']:
+            data = get_history_content(session, direction.get('pk'))
+            fio = data.get('patient').get('fio_age').split(',')[0]
+            birthday = data.get('patient').get('fio_age').split(',')[2]
 
-    patient_data["date_start"] = data['researches'][0]['research']['groups'][1]['fields'][0]['value']
-    patient_data["time_start"] = data['researches'][0]['research']['groups'][1]['fields'][1]['value']
-    raw_date_end = data['researches'][0]['research']['groups'][2]['fields'][0]['value']
-    patient_data["date_end"] = datetime.strptime(raw_date_end, '%Y-%m-%d').strftime('%d.%m.%Y')
-    patient_data["time_end"] = data['researches'][0]['research']['groups'][2]['fields'][1]['value']
-    patient_data["bed_days"] = data['researches'][0]['research']['groups'][2]['fields'][2]['value']
+            discharge_summary['Фамилия'] = fio.split(' ')[0]
+            discharge_summary['Имя'] = fio.split(' ')[1]
+            discharge_summary['Отчество'] = fio.split(' ')[2]
+            discharge_summary['Дата рождения'] = birthday.strip().split()[0]
 
-    patient_data["icd_diagnosis"] = data['researches'][0]['research']['groups'][4]['fields'][1]['value'].split()[0]
+            for group in data.get('researches')[0].get('research').get('groups'):
+                if group.get('title') == 'Анамнез заболевания':
+                    for item in group.get('fields'):
+                        key = item.get('title')
+                        value = item.get('value')
+                        if key == 'Диагноз направившего учреждения' and value != '':
+                            discharge_summary[key] = value
+                        elif key == 'Кем направлен больной' and value != '- Не выбрано':
+                            discharge_summary[key] = value
+                            with open('hospitals.json', 'r') as file:
+                                hospitals = json.load(file)
+                                hospital = hospitals.get(value)
+                                discharge_summary['Org_id'] = hospital.get('Org_id')
+                        elif key == 'Виды транспортировки' and value != '':
+                            discharge_summary[key] = value
+                        elif key == 'Номер направления' and value != '':
+                            discharge_summary[key] = value
+                        elif (
+                                key == 'Дата выдачи направления' and
+                                value != '' and
+                                discharge_summary.get('Вид госпитализации') == 'плановая'
+                        ):
+                            value = '.'.join(value.split('-')[::-1])
+                            discharge_summary[key] = value
+                        elif key == 'Вид госпитализации' and value != '':
+                            discharge_summary[key] = value
+        if direction.get('services') == ['Выписка -тр']:
+            data = get_history_content(session, direction.get('pk'))
+            who_confirmed = data.get('patient').get('doc').split(' ')[0]
+            discharge_summary['Лечащий врач'] = who_confirmed
+            groups = data.get('researches')[0]
+            for group in groups.get('research').get('groups'):
+                if group.get('title') == 'Дата и время поступления':
+                    for item in group.get('fields'):
+                        key = item.get('title')
+                        value = item.get('value')
+                        if key != '' and value != '':
+                            discharge_summary[key] = value
+                elif group.get('title') == 'Дата и время выписки':
+                    for item in group.get('fields'):
+                        key = item.get('title')
+                        value = item.get('value')
+                        if key != '' and value != '':
+                            if key == 'Время выписки':
+                                discharge_summary[key] = value
+                            elif key == 'Дата выписки':
+                                value = '.'.join(value.split('-')[::-1])
+                                discharge_summary[key] = value
+                elif group.get('title') == 'Результат лечения':
+                    for item in group.get('fields'):
+                        key = item.get('title')
+                        value = item.get('value')
+                        if key != '' and value != '':
+                            discharge_summary[key] = value
+                elif group.get('title') == 'Диагноз заключительный клинический':
+                    for item in group.get('fields'):
+                        key = item.get('title')
+                        value = item.get('value')
+                        if key != '' and value != '':
+                            if key == 'Основной диагноз по МКБ':
+                                discharge_summary[key] = value.split()[0]
+                            else:
+                                discharge_summary[key] = value
+                elif group.get('title') == 'Проведенное обследование':
+                    for item in group.get('fields'):
+                        key = item.get('title')
+                        value = item.get('value')
+                        if key != '' and value != '':
+                            discharge_summary[key] = value
+                elif group.get('title') == 'Проведенное лечение':
+                    for item in group.get('fields'):
+                        key = item.get('title')
+                        value = item.get('value')
+                        if key != '' and value != '':
+                            discharge_summary[key] = value
+                elif group.get('title') == 'Рекомендации':
+                    for item in group.get('fields'):
+                        key = item.get('title')
+                        value = item.get('value')
+                        if key != '' and value != '':
+                            discharge_summary[key] = value
+    return discharge_summary
 
-    treatment = ''
-    for element in data['researches'][0]['research']['groups'][6]['fields']:
-        treatment += f'{element["value"]}\n'
-    patient_data["treatment"] = treatment
 
-    recommendations = ''
-    for element in data['researches'][0]['research']['groups'][8]['fields']:
-        recommendations += f'{element["title"]}: {element["value"]}\n'
-    patient_data["recommendations"] = recommendations
-
-    with open(f'patients/{patient_data["surname"]}.json', 'w') as file:
-        json.dump(patient_data, file, ensure_ascii=False, indent=4)
+# pprint(extract_patient_data_from_L2(2697412))

@@ -184,12 +184,23 @@ def obtain_research_data(connect, pk_desc: int):
     return response.json()
 
 
+def get_result_obtains(index_number: int) -> str:
+    """Возвращает результаты исследования по номеру направления"""
+    obtain = obtain_research_data(session, index_number)
+    result = f"\n{obtain.get('direction').get('date')} "
+    for item in obtain.get('results').values():
+        result += item.get('title')
+        for i in item.get('fractions').values():
+            index = f'\n{i.get("title")} {i.get("result")}{i.get("units")}'
+            result += index
+    return result
+
+
 def extract_patient_data_from_L2(history_number: int):
     authorization_l2(session, login_l2, password_l2) # авторизация в L2
     history = get_history_content(session, history_number) # все данные по истории болезни
     directions = history.get('researches')[0].get('children_directions') # номера направлений всех записей в истории болезни
-
-    discharge_summary = {}
+    discharge_summary = {'Анализы': ''}
 
     for direction in directions:
         if direction.get('services') == ['Первичный осмотр']:
@@ -283,7 +294,13 @@ def extract_patient_data_from_L2(history_number: int):
                         value = item.get('value')
                         if key != '' and value != '':
                             discharge_summary[key] = value
+        if direction.get('services')[0] in ['Общий анализ мочи',
+                                            'Калий,  натрий',
+                                            'Полный гематологический анализ',
+                                            'Общий белок', 'Глюкоза(г)',
+                                            'Билирубин общий',
+                                            'Билирубин связанный (прямой)',
+                                            'Билирубин свободный (непрямой)']:
+            data = get_result_obtains(direction.get('pk'))
+            discharge_summary['Анализы'] += data
     return discharge_summary
-
-
-# pprint(extract_patient_data_from_L2(2697412))

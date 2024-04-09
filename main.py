@@ -15,7 +15,7 @@ from single_digital_platform import (
     mkb,
     create_template,
     update_treatment_evn_template,
-    update_recommendation_evn_template
+    update_recommendation_evn_template, update_research_evn_template
 )
 
 
@@ -119,6 +119,12 @@ for item in get_patients_from_table('Q3:Q43'):
 
             template = create_template(session, evn_card['EvnSection_id'], med_staff_fact_id=med_staff_fact_id)
 
+            update_research_evn_template(
+                session,
+                template_id=template['EvnXml_id'],
+                text=data.get('Анализы')
+            )
+
             update_treatment_evn_template(
                 session,
                 template_id=template['EvnXml_id'],
@@ -133,10 +139,12 @@ for item in get_patients_from_table('Q3:Q43'):
             )
             print(f'{data.get("Фамилия")} в ЕЦП загружен')
             with open('uploaded_stories.txt', 'a') as file:
-                file.write(f'{datetime.now()}: {data.get("Фамилия")} в ЕЦП загружен')
+                file.write(f'{datetime.now()}: {data.get("Фамилия")} в ЕЦП загружен\n')
         except Exception as error:
             print(f'{error} {data.get("Фамилия")}')
+            with open('errors.txt', 'a') as file:
+                file.write(f'{datetime.now()}: {error} {data.get("Фамилия")}\n')
     except Exception as err:
         print(f'Ошибка: {err}')
         with open('errors.txt', 'a') as file:
-            file.write(f'{datetime.now()}: {err}')
+            file.write(f'{datetime.now()}: {err}\n')

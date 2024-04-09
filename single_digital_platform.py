@@ -1185,7 +1185,4 @@ def get_list_of_discharge_notes_for_signature(connect): # разобрать!!!
 
 # session = requests.Session()
 # session.proxies.update(proxies)
-#
-# authorization = entry(session, login='daa87', password='Daa026')
-# data = search_patient(session, 'Валерия', 'Малых', 'Владимировна', '01.04.2008')
-# print(data)
+

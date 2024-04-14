@@ -185,7 +185,7 @@ def save_EVN(
         ('isAutoCreate', '1'),
         ('vizit_direction_control_check', '0'),
         ('ignoreParentEvnDateCheck', '0'),
-        ('ignoreEvnPSDoublesCheck', '0'),
+        ('ignoreEvnPSDoublesCheck', '1'), # 0 - проверка пересечения случаев в ЕЦП, 1 - игнорирование этой проверки
         ('ignoreEvnPSTimeDeseaseCheck', '0'),
         ('ignoreCheckKSGisEmpty', '0'),
         ('ignoreEvnPSHemoDouble', '0'),

@@ -179,13 +179,13 @@ def save_EVN(
         ('EvnPS_IsPLAmbulance', '1'),
         ('Diag_eid', ''),
         ('addEvnSection', '1'),
-        ('LpuSection_id', '380101000006029'),
+        ('LpuSection_id', '380101000006029'),  # ID травматолого-ортопедического отделения
         ('MedPersonal_id', med_personal_id),
         ('MedStaffFact_id', med_staff_fact_id),
         ('isAutoCreate', '1'),
         ('vizit_direction_control_check', '0'),
         ('ignoreParentEvnDateCheck', '0'),
-        ('ignoreEvnPSDoublesCheck', '1'), # 0 - проверка пересечения случаев в ЕЦП, 1 - игнорирование этой проверки
+        ('ignoreEvnPSDoublesCheck', '1'),  # 0 - проверка пересечения случаев в ЕЦП, 1 - игнорирование этой проверки
         ('ignoreEvnPSTimeDeseaseCheck', '0'),
         ('ignoreCheckKSGisEmpty', '0'),
         ('ignoreEvnPSHemoDouble', '0'),

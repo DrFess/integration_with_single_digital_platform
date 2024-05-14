@@ -1,5 +1,4 @@
 import json
-from pprint import pprint
 from datetime import datetime
 import requests
 
@@ -148,3 +147,5 @@ for item in get_patients_from_table('Q3:Q43'):
         print(f'Ошибка: {err}')
         with open('errors.txt', 'a') as file:
             file.write(f'{datetime.now()}: {err}\n')
+
+session.close()

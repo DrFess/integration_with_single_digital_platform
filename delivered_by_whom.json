@@ -1,0 +1,32 @@
+[
+    {
+        "PrehospArrive_id": 1,
+        "PrehospArrive_Code": 1,
+        "PrehospArrive_Name": "Самостоятельно",
+        "PrehospArrive_SysNick": "sam"
+    },
+    {
+        "PrehospArrive_id": 2,
+        "PrehospArrive_Code": 2,
+        "PrehospArrive_Name": "Скорая помощь",
+        "PrehospArrive_SysNick": "quick"
+    },
+    {
+        "PrehospArrive_id": 3,
+        "PrehospArrive_Code": 3,
+        "PrehospArrive_Name": "Эвакопункт",
+        "PrehospArrive_SysNick": "evak"
+    },
+    {
+        "PrehospArrive_id": 4,
+        "PrehospArrive_Code": 4,
+        "PrehospArrive_Name": "Санавиация",
+        "PrehospArrive_SysNick": "avia"
+    },
+    {
+        "PrehospArrive_id": 5,
+        "PrehospArrive_Code": 5,
+        "PrehospArrive_Name": "Прочие",
+        "PrehospArrive_SysNick": "Other"
+    }
+]

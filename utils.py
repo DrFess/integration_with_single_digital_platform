@@ -36,7 +36,7 @@ params = {
 
 data = {
     'Person_Surname': '',
-    'EvnSection_disDate_Range': '01.05.2024 - 31.05.2024',
+    'EvnSection_disDate_Range': '01.06.2024 - 30.06.2024',
     'LpuSection_cid': '',
     'isLeave': '1',
     'PersonCardStateType_id': '1',
@@ -81,22 +81,23 @@ departments_rows = {
     'Отделение медицинской реабилитации для пациентов с соматическими заболеваниями': 16,
     'Педиатрическое отделение (для детей до 1 года, в том числе дневной стаицонар)': 17,
     'Отделение медицинской реабилитации пациентов с нарушением функции центральной нервной системы': 18,
-    'Педиатрическое (кардио)': 19,
+    'Педиатрическое отделение (в том числе дневной стационар)': 19,
     'Детское психоневрологическое отделение (в том числе дневной стационар)': 20,
     'Отделение патологии новорожденных и недоношенных детей': 21,
+    'Отделение анестезиологии-реанимации и интенсивной терапии №2 (для новорожденных детей для хирургического отделения детского номер два)': 23,
     'Детское ожоговое отделение': 24,
     'Всего по больнице': 25
 }
 
 for item in departments_rows:
     if item in list(departments.keys()):
-        index = f'J{departments_rows.get(item)}'
+        index = f'N{departments_rows.get(item)}'
         value = departments.get(item)
-        print(edit_xlsx_ECP_table(
+        edit_xlsx_ECP_table(
             path=path_to_excel_tabel,
             index=index,
             value=value,
-        ))
+        )
 
 for item in range(3, 25):
-    cell_color_edit(path_to_excel_tabel, f'L{item}')
+    cell_color_edit(path_to_excel_tabel, f'P{item}')

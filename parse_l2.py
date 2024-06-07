@@ -114,7 +114,7 @@ def get_initial_examination(connect, pk_researches: int):
     }
 
     json_data = {
-        'direction': pk_researches, # номер истории
+        'direction': pk_researches,  # номер истории
         'r_type': 'primary receptions',
         'every': False,
     }
@@ -143,7 +143,7 @@ def get_history_content(connect, number):
     }
 
     json_data = {
-        'pk': number, # номер направления, не истории
+        'pk': number,  # номер направления, не истории
         'force': True,
     }
 
@@ -197,21 +197,25 @@ def get_result_obtains(index_number: int) -> str:
 
 
 def extract_patient_data_from_L2(history_number: int):
-    authorization_l2(session, login_l2, password_l2) # авторизация в L2
-    history = get_history_content(session, history_number) # все данные по истории болезни
-    directions = history.get('researches')[0].get('children_directions') # номера направлений всех записей в истории болезни
+
     discharge_summary = {'Анализы': ''}
+
+    authorization_l2(session, login_l2, password_l2)  # авторизация в L2
+
+    history = get_history_content(session, history_number)  # все данные по истории болезни
+    directions = history.get('researches')[0].get('children_directions')  # номера направлений всех записей в истории болезни
+
+    fio = history.get('patient').get('fio_age').split(',')[0]
+    birthday = history.get('patient').get('fio_age').split(',')[2]
+
+    discharge_summary['Фамилия'] = fio.split(' ')[0]
+    discharge_summary['Имя'] = fio.split(' ')[1]
+    discharge_summary['Отчество'] = fio.split(' ')[2]
+    discharge_summary['Дата рождения'] = birthday.strip().split()[0]
 
     for direction in directions:
         if direction.get('services') == ['Первичный осмотр']:
             data = get_history_content(session, direction.get('pk'))
-            fio = data.get('patient').get('fio_age').split(',')[0]
-            birthday = data.get('patient').get('fio_age').split(',')[2]
-
-            discharge_summary['Фамилия'] = fio.split(' ')[0]
-            discharge_summary['Имя'] = fio.split(' ')[1]
-            discharge_summary['Отчество'] = fio.split(' ')[2]
-            discharge_summary['Дата рождения'] = birthday.strip().split()[0]
 
             for group in data.get('researches')[0].get('research').get('groups'):
                 if group.get('title') == 'Анамнез заболевания':
@@ -220,7 +224,7 @@ def extract_patient_data_from_L2(history_number: int):
                         value = item.get('value')
                         if key == 'Диагноз направившего учреждения' and value != '':
                             discharge_summary[key] = value
-                        elif key == 'Кем направлен больной' and value != '- Не выбрано':
+                        elif key == 'Направлен' and value == 'по направлению':
                             discharge_summary[key] = value
                             with open('hospitals.json', 'r') as file:
                                 hospitals = json.load(file)

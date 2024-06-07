@@ -478,7 +478,7 @@ def save_data(
         ('EvnSection_IsAdultEscort', '1'),  # const
         ('EvnSection_IsMedReason', '1'),  # проверить не индекс ли заключительного диагноза, если да -> const
         ('EvnSection_AdultEscortPeriod', ''),
-        ('LpuSection_id', '380101000006029'), # Травматологии и ортопедии
+        ('LpuSection_id', '380101000015688'), # Травматологии и ортопедии
         ('LpuSectionTransType_id', ''),
         ('EvnSection_IsMeal', '1'),  # const
         ('LpuSectionProfile_id', '380101000000301'),  # id Травматологии и ортопедии

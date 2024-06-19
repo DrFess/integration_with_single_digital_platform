@@ -1,9 +1,6 @@
 from datetime import datetime
 
-import requests
 from fake_useragent import FakeUserAgent
-
-from settings import proxies
 
 
 def calculate_date(start_date: str, end_date: str) -> int:
@@ -179,7 +176,7 @@ def save_EVN(
         ('EvnPS_IsPLAmbulance', '1'),
         ('Diag_eid', ''),
         ('addEvnSection', '1'),
-        ('LpuSection_id', '380101000006029'),  # ID травматолого-ортопедического отделения
+        ('LpuSection_id', '380101000015688'),  # ID травматолого-ортопедического отделения
         ('MedPersonal_id', med_personal_id),
         ('MedStaffFact_id', med_staff_fact_id),
         ('isAutoCreate', '1'),
@@ -229,12 +226,12 @@ def save_EVN(
         ('EvnPS_setDate', f'{date_start}'),
         ('EvnPS_setTime', f'{time_start}'),
         ('EvnPS_IsWithoutDirection', '1'),
-        ('PrehospDirect_id', other_hosp), # при плановой госпитализации значение "2" означает другая МО
-        ('Org_did', org_id), # "Org_id"
+        ('PrehospDirect_id', other_hosp),  # при плановой госпитализации значение "2" означает другая МО
+        ('Org_did', org_id),  # "Org_id"
         ('MedStaffFact_did', ''),
         ('MedStaffFact_TFOMSCode', ''),
-        ('EvnDirection_Num', number_of_referral), # номер направления при плановой госпитализации
-        ('EvnDirection_setDate', date_of_referral), # дата выдачи направления
+        ('EvnDirection_Num', number_of_referral),  # номер направления при плановой госпитализации
+        ('EvnDirection_setDate', date_of_referral),  # дата выдачи направления
         ('PrehospArrive_id', '1'),
         ('CmpCallCard_id', ''),
         ('Diag_did', ''),
@@ -250,7 +247,7 @@ def save_EVN(
         ('EvnPS_IsWrongCure', '1'),
         ('EvnPS_IsDiagMismatch', '1'),
         ('LpuSectionTransType_id', ''),
-        ('PrehospType_id', type_hospitalization), # значение 2 при плановой
+        ('PrehospType_id', type_hospitalization),  # значение 2 при плановой
         ('EvnPS_HospCount', ''),
         ('Okei_id', '100'),
         ('EvnPS_TimeDesease', ''),
@@ -478,10 +475,10 @@ def save_data(
         ('EvnSection_IsAdultEscort', '1'),  # const
         ('EvnSection_IsMedReason', '1'),  # проверить не индекс ли заключительного диагноза, если да -> const
         ('EvnSection_AdultEscortPeriod', ''),
-        ('LpuSection_id', '380101000015688'), # Травматологии и ортопедии
+        ('LpuSection_id', '380101000015688'),  # Травматологии и ортопедии
         ('LpuSectionTransType_id', ''),
         ('EvnSection_IsMeal', '1'),  # const
-        ('LpuSectionProfile_id', '380101000000301'),  # id Травматологии и ортопедии
+        ('LpuSectionProfile_id', '380101000000301'),  # id профиля Травматологии и ортопедии
         ('LpuSectionBedProfileLink_fedid', '380101000000438'),  # id профиля койки
         ('LpuSectionWard_id', ''),
         ('Bed_id', ''),
@@ -494,7 +491,7 @@ def save_data(
         ('PayContract_id', ''),
         ('PolisDMS_id', ''),
         ('TariffClass_id', ''),
-        ('MedStaffFact_id', med_staff_fact_id),  # Дегтярев ID
+        ('MedStaffFact_id', med_staff_fact_id),
         ('Diag_id', f'{diag_id}'),
         ('HeartFailureStage_54', ''),
         ('HeartFailureClass_55', ''),
@@ -1079,9 +1076,9 @@ def get_referral_for_hospitalization(connect,
         'DirType_Code': '',
         'DirType_Name': '',
         'DirFailType_Name': '',
-        'LpuSectionProfile_id': '380101000000301', # профиль "Травматология и ортопедия"
+        'LpuSectionProfile_id': '380101000000301',  # профиль "Травматология и ортопедия"
         'LpuSectionProfile_Name': '',
-        'LpuSection_id': '380101000006029', # ID матрешки
+        'LpuSection_id': '380101000001853',  # ID отделения
         'LpuSection_did': '',
         'LpuSection_Name': '',
         'EvnQueue_Days': '',
@@ -1133,7 +1130,7 @@ def get_referral_for_hospitalization(connect,
     return response.json()
 
 
-def get_list_of_discharge_notes_for_signature(connect): # разобрать!!!
+def get_list_of_discharge_notes_for_signature(connect):  # разобрать!!!
     """Список не подписанных выписных"""
 
     headers = {
@@ -1156,15 +1153,15 @@ def get_list_of_discharge_notes_for_signature(connect): # разобрать!!!
     params = {
         'c': 'EMDSignWin',
         'm': 'searchDocs',
-        '_dc': '1711851258257', #???
+        '_dc': '1711851258257',  # ???
     }
 
     data = {
         'EMDDocumentTypeLocal_id': '100067',
         'Lpu_id': '10379',
         'EMDOrg_id': '10379',
-        'LpuBuilding_id': '380101000000122',
-        'LpuSection_id': '380101000006029',
+        'LpuBuilding_id': '380101000001853',
+        'LpuSection_id': '380101000015688',
         'MedPersonal_id': '380101000004549',
         'PersonWork_id': 'null',
         'Evn_insDT_period': '',
@@ -1181,8 +1178,3 @@ def get_list_of_discharge_notes_for_signature(connect): # разобрать!!!
 
     response = connect.post('https://ecp38.is-mis.ru/', params=params, headers=headers, data=data)
     return response.json()
-
-
-# session = requests.Session()
-# session.proxies.update(proxies)
-

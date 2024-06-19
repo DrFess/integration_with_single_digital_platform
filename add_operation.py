@@ -1,3 +1,9 @@
+import requests
+
+from settings import proxies
+from single_digital_platform import entry
+
+
 def save_changes(connect):
     """Сохраните внесенные данные (опционально)"""
     headers = {
@@ -23,12 +29,12 @@ def save_changes(connect):
     }
 
     data = {
-        'Evn_id': '380101342738885', #???
+        'Evn_id': '380101342738885',  # ???
         'changedData': '',
         'saveOnce': 'true',
     }
 
-    response = connect.post('https://ecp38.is-mis.ru/', params=params, cookies=cookies, headers=headers, data=data)
+    response = connect.post('https://ecp38.is-mis.ru/', params=params, headers=headers, data=data)
     return response.json()
 
 
@@ -129,9 +135,9 @@ def save_blood_group(connect, person_id: str, server_id: str, date: str, group_t
         'PersonBloodGroup_id': '0',
         'Person_id': person_id,
         'Server_id': server_id,
-        'BloodGroupType_id': group_type, # номер группы 1-первая, 2-вторая и тд
-        'RhFactorType_id': rh, # 1 - положительная, 2 - отрицательная
-        'PersonBloodGroup_setDate': date, # dd.mm.yyyy
+        'BloodGroupType_id': group_type,  # номер группы 1-первая, 2-вторая и тд
+        'RhFactorType_id': rh,  # 1 - положительная, 2 - отрицательная
+        'PersonBloodGroup_setDate': date,  # dd.mm.yyyy
         'PersonBloodPhenotype_id': '0',
         'PersonBloodPhenotype_ThereAre_H': 'off',
     }
@@ -139,7 +145,8 @@ def save_blood_group(connect, person_id: str, server_id: str, date: str, group_t
     response = connect.post('https://ecp38.is-mis.ru/', params=params, headers=headers, data=data)
     return response.json()
 
-def get_info_code_operation(connect, code: str, oper_date: str):
+
+def get_info_code_operation(connect, code: str, oper_date: str, person_id: str, evnsection_id: str):
     """Получение информации по коду операции
     UslugaComplex_id, UslugaComplex_pid, UslugaComplex_AttributeList
     """
@@ -170,13 +177,13 @@ def get_info_code_operation(connect, code: str, oper_date: str):
         'to': 'EvnUslugaOper',
         'nonDispOnly': '1',
         'allowedUslugaComplexAttributeList': '["oper"]',
-        'UslugaComplex_Date': oper_date, # дата операции
-        'PersonAge': '13', # забирать из запроса на поиск пациента
+        'UslugaComplex_Date': oper_date,  # дата операции
+        'PersonAge': '13',  # забирать из запроса на поиск пациента
         'query': code,
-        'Person_id': '197156', # забирать из запроса на поиск пациента
+        'Person_id': person_id,  # забирать из запроса на поиск пациента
         'uslugaCategoryList': '["gost2011"]',
-        'EvnUsluga_pid': '380101342737189', #const
-        'LpuSection_pid': '380101000006029', #const
+        'EvnUsluga_pid': evnsection_id,  # EvnSection_id при создании случая госпитализации
+        'LpuSection_pid': '380101000015688',  # const - id отделения
     }
 
     response = connect.post('https://ecp38.is-mis.ru/', params=params, headers=headers, data=data)
@@ -320,8 +327,8 @@ def save_oper_anesthesia(connect, anesthesiaClass_id: str):
 
     data = {
         'EvnUslugaOperAnest_id': '0',
-        'EvnUslugaOperAnest_pid': '380101342738885', #???
-        'AnesthesiaClass_id': anesthesiaClass_id, # из get_anesthesia_type
+        'EvnUslugaOperAnest_pid': '380101342738885',  # ???
+        'AnesthesiaClass_id': anesthesiaClass_id,  # из get_anesthesia_type
     }
 
     response = connect.post('https://ecp38.is-mis.ru/', params=params, headers=headers, data=data)
@@ -445,7 +452,7 @@ def get_oper_template(connect, medStaffFact_id: str, medPersonal_id: str, ):
         'LpuSection_id': '380101000006029',
         'MedService_id': '',
         'XmlTemplateCat_id': '380101000010968',
-        'UslugaComplex_id': '202879', #???
+        'UslugaComplex_id': '202879',  # ???
         'XmlTypeKind_id': '',
         'templName': '',
         'templType': '1',
@@ -576,14 +583,14 @@ def save_all_oper_info(connect,
         'Evn_id': '380101342737176',
         'EvnUslugaOper_id': '380101342738885', #???
         'EvnUslugaOper_rid': '0',
-        'Person_id': person_id, # из поиска пациента
-        'PersonEvn_id': personEvn_id, # из поиска пациента
-        'Server_id': server_id, # из поиска пациента
+        'Person_id': person_id,  # из поиска пациента
+        'PersonEvn_id': personEvn_id,  # из поиска пациента
+        'Server_id': server_id,  # из поиска пациента
         'Morbus_id': '0',
         'IsCardioCheck': '0',
-        'EvnUslugaOper_pid': '380101342737189', #???
+        'EvnUslugaOper_pid': '380101342737189',  # ???
         'EvnDirection_id': '',
-        'EvnUslugaOper_setDate': start_date, #dd.mm.YYYY
+        'EvnUslugaOper_setDate': start_date,  # dd.mm.YYYY
         'EvnUslugaOper_setTime': start_time,
         'EvnUslugaOper_disDate': end_date,
         'EvnUslugaOper_disTime': end_time,
@@ -592,7 +599,7 @@ def save_all_oper_info(connect,
         'bloodParams': '',
         'UslugaExecutionReason_id': '',
         'UslugaPlace_id': '1',
-        'LpuSection_uid': '380101000006029',
+        'LpuSection_uid': '380101000001853',
         'LpuSectionProfile_id': '380101000000301',
         'MedSpecOms_id': '',
         'MedStaffFact_id': medStaffFact_id,
@@ -602,7 +609,7 @@ def save_all_oper_info(connect,
         'PolisDMS_id': '',
         'EvnPrescr_id': '',
         'UslugaCategory_id': '4',
-        'UslugaComplex_id': '202879', #???
+        'UslugaComplex_id': '202879',  # ???
         'UslugaMedType_id': '',
         'UslugaComplexTariff_id': '',
         'DiagSetClass_id': '',
@@ -634,3 +641,9 @@ def save_all_oper_info(connect,
 
     response = connect.post('https://ecp38.is-mis.ru/', params=params, headers=headers, data=data)
     return response.json()
+
+
+session = requests.Session()  # создание сессии подключения
+session.proxies.update(proxies)
+entry(session, login='daa87', password='Daa026')
+print(get_info_code_operation(session, 'A16.03.034.002', '17.06.2024', '629506', '380101369004172'))

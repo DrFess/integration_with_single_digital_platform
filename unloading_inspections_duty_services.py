@@ -553,7 +553,7 @@ def save_EDS(connect, registry_object_id: str, emd_version_id: str, med_staff_fa
     return response
 
 
-with open('doctors.json', 'r') as file:
+with open('jsonS/doctors.json', 'r') as file:
     doctors = json.load(file)
 
 chapters_list = ['complaint', 'anamnesmorbi', 'localstatus', 'research', 'diagnos', 'recommendations']

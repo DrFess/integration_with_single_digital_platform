@@ -18,36 +18,36 @@ from single_digital_platform import (
 )
 
 
-with open('doctors.json', 'r') as file:
+with open('jsonS/doctors.json', 'r') as file:  # список словарей с данными врачей
     doctors = json.load(file)
 
-session = requests.Session()
+session = requests.Session()  # создание сессии подключения
 session.proxies.update(proxies)
 
-for item in get_patients_from_table('Q3:Q43'):
+for item in get_patients_from_table('Q3:Q43'):  # функция получает список номеров выписанных историй
     try:
-        data = extract_patient_data_from_L2(int(item))
+        data = extract_patient_data_from_L2(int(item))  # данные из истории в виде словаря
         doctor_surname = data.get('Лечащий врач')
 
-        login = doctors.get(doctor_surname).get('login')
-        password = doctors.get(doctor_surname).get('password')
-        med_personal_id = doctors.get(doctor_surname).get('MedPersonal_id')
-        med_staff_fact_id = doctors.get(doctor_surname).get('MedStaffFact_id')
+        login = doctors.get(doctor_surname).get('login')  # получаем логин по фамилии лечащего врача из data
+        password = doctors.get(doctor_surname).get('password')  # получаем пароль по фамилии лечащего врача из data
+        med_personal_id = doctors.get(doctor_surname).get('MedPersonal_id')  # получаем персональное id по фамилии лечащего врача из data
+        med_staff_fact_id = doctors.get(doctor_surname).get('MedStaffFact_id')  # получаем рабочее id по фамилии лечащего врача из data
 
-        authorization = entry(session, login=login, password=password)
+        authorization = entry(session, login=login, password=password)  # авторизация в ЕЦП с данными лечащего врача
 
-        search = search_patient(
+        search = search_patient(  # поиск пациента
             session,
             name=data.get('Имя'),
             surname=data.get('Фамилия'),
             patronymic=data.get('Отчество'),
             birthday=data.get('Дата рождения'),
         )
-        patient = search.get('data')[0]['Person_id']
+        patient = search.get('data')[0]['Person_id']  # person_id пациента после поиска его в ЕЦП
 
-        diagnosis_id = mkb(session, letter=data.get('Основной диагноз по МКБ'))[0]['Diag_id']
+        diagnosis_id = mkb(session, letter=data.get('Основной диагноз по МКБ'))[0]['Diag_id']  # id диагноза по коду МКБ
 
-        ksg_and_koef = get_KSG_KOEF(
+        ksg_and_koef = get_KSG_KOEF(  # расчёт КСГ по сроку лечения и коду МКБ -> нужно добавить метод для расчёта по операции
             session,
             date_start=data.get('Дата поступления'),
             date_end=data.get('Дата выписки'),
@@ -55,9 +55,9 @@ for item in get_patients_from_table('Q3:Q43'):
             diagnosis_id=diagnosis_id
         )
 
-        evn_number = get_evn_number(session)
+        evn_number = get_evn_number(session)  # получаем номер случая лечения
         try:
-            if data.get('Вид госпитализации') == 'экстренная':
+            if data.get('Вид госпитализации') == 'экстренная':  # сохранение карты выбывшего == госпитализация/оформлен
                 evn_card = save_EVN(
                     session,
                     patient_id=patient,
@@ -73,7 +73,7 @@ for item in get_patients_from_table('Q3:Q43'):
                     org_id='',
                     med_personal_id=med_personal_id,
                     med_staff_fact_id=med_staff_fact_id
-                ) # тут может быть ошибка при пересечении случаев госпитализации с другими отделениями. Нужен обработчик ошибок
+                )  # ошибка пересечения случаев госпитализации/обращения игнорируется
             elif data.get('Вид госпитализации') == 'плановая':
                 evn_card = save_EVN(
                     session,
@@ -95,7 +95,7 @@ for item in get_patients_from_table('Q3:Q43'):
                 evn_card = 'Ошибка на этапе вида госпитализации'
                 print(evn_card)
 
-            fourth_step = save_data(
+            fourth_step = save_data(  # функция переводит пациента в выписанные
                 session,
                 date_start=data.get('Дата поступления'),
                 date_end=data.get('Дата выписки'),
@@ -116,27 +116,28 @@ for item in get_patients_from_table('Q3:Q43'):
                 med_staff_fact_id=med_staff_fact_id
             )
 
-            template = create_template(session, evn_card['EvnSection_id'], med_staff_fact_id=med_staff_fact_id)
+            template = create_template(session, evn_card['EvnSection_id'], med_staff_fact_id=med_staff_fact_id)  # создаёт пустой шаблон выписного эпикриза по id шаблона
 
-            update_research_evn_template(
+            update_research_evn_template(  # обновляет исследованиями данные шаблона выписного эпикриза
                 session,
                 template_id=template['EvnXml_id'],
                 text=data.get('Анализы')
             )
 
-            update_treatment_evn_template(
+            update_treatment_evn_template(  # обновляет лечением данные шаблона выписного эпикриза
                 session,
                 template_id=template['EvnXml_id'],
                 text=f'{data.get("Консервативное")}\n{data.get("Оперативные вмешательства (операции), включая сведения об анестезиологическом пособии")}'
             )
 
-            update_recommendation_evn_template(
+            update_recommendation_evn_template(  # обновляет рекомендациями данные шаблона выписного эпикриза
                 session,
                 template_id=template['EvnXml_id'],
                 text=f'{data.get("Наблюдение специалистов на амбулаторном этапе (явка на осмотр специалистов не позднее 7 дней после выписки из стационара в поликлинику по месту жительства)")}'
                      f'\n{data.get("Ограничение физических нагрузок")}\n{data.get("Уход за послеоперационной раной")}\n'
             )
             print(f'{data.get("Фамилия")} в ЕЦП загружен')
+            print(data)
             with open('uploaded_stories.txt', 'a') as file:
                 file.write(f'{datetime.now()}: {data.get("Фамилия")} в ЕЦП загружен\n')
         except Exception as error:

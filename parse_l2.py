@@ -13,7 +13,7 @@ session.proxies.update(proxies)
 
 def get_patients_from_table(interval: str) -> list:
     """Получение списка номеров выписанных историй из сводной гугл-таблицы"""
-    gs = gspread.service_account(filename='access.json')
+    gs = gspread.service_account(filename='jsonS/access.json')
     sh = gs.open_by_key('1feNhDOpE41gwPwuvtW_V5kZH2hFSt9qc8gZvmoH2UIE')
 
     worksheet = sh.get_worksheet_by_id(0)
@@ -196,7 +196,7 @@ def get_result_obtains(index_number: int) -> str:
     return result
 
 
-def extract_patient_data_from_L2(history_number: int):
+def extract_patient_data_from_L2(history_number: int) -> dict:
 
     discharge_summary = {'Анализы': ''}
 
@@ -226,7 +226,7 @@ def extract_patient_data_from_L2(history_number: int):
                             discharge_summary[key] = value
                         elif key == 'Направлен' and value == 'по направлению':
                             discharge_summary[key] = value
-                            with open('hospitals.json', 'r') as file:
+                            with open('jsonS/hospitals.json', 'r') as file:
                                 hospitals = json.load(file)
                                 hospital = hospitals.get(value)
                                 discharge_summary['Org_id'] = hospital.get('Org_id')

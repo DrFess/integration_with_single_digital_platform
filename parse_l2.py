@@ -198,7 +198,10 @@ def get_result_obtains(index_number: int) -> str:
 
 def extract_patient_data_from_L2(history_number: int) -> dict:
 
-    discharge_summary = {'Анализы': ''}
+    discharge_summary = {
+        'Анализы': '',
+        'Протоколы операций': []
+    }
 
     authorization_l2(session, login_l2, password_l2)  # авторизация в L2
 
@@ -243,7 +246,65 @@ def extract_patient_data_from_L2(history_number: int) -> dict:
                             discharge_summary[key] = value
                         elif key == 'Вид госпитализации' and value != '':
                             discharge_summary[key] = value
-        if direction.get('services') == ['Выписка -тр']:
+        elif direction.get('services') == ['Протокол операции (тр)']:
+            operation_info_for_append = {}
+            data = get_history_content(session, direction.get('pk'))
+            operation_info = data.get('researches')[0].get('research').get('groups')
+            # pprint(operation_info[0].get('fields'))
+            for index in range(0, len(operation_info)):
+                for item in operation_info[index].get('fields'):
+                    if item.get('title') == 'Дата проведения':
+                        operation_date = '.'.join(item.get('value').split('-')[::-1])
+                        operation_info_for_append['Дата проведения'] = operation_date
+                    elif item.get('title') == 'Время начала':
+                        if len(item.get('value')) == 5 and ':' in item.get('value'):
+                            operation_time_start = item.get('value')
+                        elif '.' in item.get('value'):
+                            operation_time_start = item.get('value').replace('.', ':')
+                        elif len(item.get('value')) < 4:
+                            operation_time_start = f'0{item.get("value")}'
+                        else:
+                            operation_time_start = 'Не верно указано время начала операции'
+                        operation_info_for_append['Время начала'] = operation_time_start
+                    elif item.get('title') == 'Время окончания':
+                        if len(item.get('value')) == 5 and ':' in item.get('value'):
+                            operation_time_end = item.get('value')
+                        elif '.' in item.get('value'):
+                            operation_time_end = item.get('value').replace('.', ':')
+                        elif len(item.get('value')) < 4:
+                            operation_time_end = f'0{item.get("value")}'
+                        else:
+                            operation_time_end = 'Не верно указано время окончания операции'
+                        operation_info_for_append['Время окончания'] = operation_time_end
+                    elif item.get('title') == 'Название операции':
+                        operation_info_for_append['Название операции'] = item.get('value')
+                    elif item.get('title') == 'Код операции':
+                        operation_info_for_append['Код операции'] = item.get('value')
+                    elif item.get('title') == 'Категория сложности':
+                        operation_info_for_append['Категория сложности'] = item.get('value')
+                    elif item.get('title') == 'Оперативное вмешательство' and item.get('pk') == 1994:
+                        operation_info_for_append['Категория сложности'] = item.get('value')
+                    elif item.get('title') == 'Оперировал':
+                        operation_info_for_append['Оперировавший хирург'] = item.get('value')
+                    elif item.get('title') == 'Ассистенты':
+                        operation_info_for_append['Ассистенты'] = item.get('value')
+                    elif item.get('title') == 'Анестезиолог':
+                        operation_info_for_append['Анестезиолог'] = item.get('value')
+                    elif item.get('title') == 'Анестезист':
+                        operation_info_for_append['Анестезист'] = item.get('value')
+                    elif item.get('title') == 'Операционная медицинская сестра':
+                        if item.get('value') != '':
+                            operation_info_for_append['Операционная медицинская сестра'] = item.get('value')
+                    elif item.get('pk') == 1873:
+                        operation_info_for_append['Ход операции'] = item.get('value')
+                    elif item.get('title') == 'Метод обезболивания':
+                        operation_info_for_append['Вид анестезии'] = item.get('value')
+                    elif item.get('title') == 'Осложнения':
+                        operation_info_for_append['Осложнения'] = item.get('value')
+            discharge_summary['Протоколы операций'].append(operation_info_for_append)
+            # print(operation_info_for_append)
+            # print('_______________________________')
+        elif direction.get('services') == ['Выписка -тр']:
             data = get_history_content(session, direction.get('pk'))
             who_confirmed = data.get('patient').get('doc').split(' ')[0]
             discharge_summary['Лечащий врач'] = who_confirmed
@@ -308,3 +369,6 @@ def extract_patient_data_from_L2(history_number: int) -> dict:
             data = get_result_obtains(direction.get('pk'))
             discharge_summary['Анализы'] += data
     return discharge_summary
+
+
+pprint(extract_patient_data_from_L2(2886975))

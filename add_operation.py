@@ -1,3 +1,5 @@
+from pprint import pprint
+
 import requests
 
 from settings import proxies
@@ -179,7 +181,7 @@ def get_info_code_operation(connect, code: str, oper_date: str, person_id: str, 
         'allowedUslugaComplexAttributeList': '["oper"]',
         'UslugaComplex_Date': oper_date,  # дата операции
         'PersonAge': '13',  # забирать из запроса на поиск пациента
-        'query': code,
+        # 'query': code,  # код операции???
         'Person_id': person_id,  # забирать из запроса на поиск пациента
         'uslugaCategoryList': '["gost2011"]',
         'EvnUsluga_pid': evnsection_id,  # EvnSection_id при создании случая госпитализации
@@ -257,8 +259,8 @@ def add_operation_member(connect, medPersonal_id: str, medStaffFact_id: str, sur
         'MedPersonal_id': medPersonal_id,
         'EvnUslugaOper_setDate': '03.04.2024',
         'EvnUslugaOperBrig_id': '0',
-        'EvnUslugaOperBrig_pid': '380101342738885', #??? видимо id конкретной услуги операции, где брать?
-        'SurgType_id': surgType_id, # забирать из get_operation_role_team
+        'EvnUslugaOperBrig_pid': '380101342738885',  # ??? видимо id конкретной услуги операции, где брать?
+        'SurgType_id': surgType_id,  # забирать из get_operation_role_team
         'MedStaffFact_id': medStaffFact_id,
     }
 
@@ -406,15 +408,15 @@ def save_complication(connect,
     data = {
         'accessType': '',
         'EvnAgg_id': '0',
-        'EvnAgg_pid': '380101342738885', #???
+        'EvnAgg_pid': '380101342738885',  # ???
         'EvnUslugaOnkoSurg_id': '',
-        'Person_id': person_id, # из поиска пациента
-        'PersonEvn_id': personEvn_id, # из поиска пациента
-        'Server_id': server_id, # из поиска пациента
-        'EvnAgg_setDate': date, # dd.mm.YYY
-        'EvnAgg_setTime': time_set, # hh:mm
-        'AggType_id': complication_id, # из get_complication
-        'AggWhen_id': when_id, # из get_complication
+        'Person_id': person_id,  # из поиска пациента
+        'PersonEvn_id': personEvn_id,  # из поиска пациента
+        'Server_id': server_id,  # из поиска пациента
+        'EvnAgg_setDate': date,  # dd.mm.YYY
+        'EvnAgg_setTime': time_set,  # hh:mm
+        'AggType_id': complication_id,  # из get_complication
+        'AggWhen_id': when_id,  # из get_complication
     }
 
     response = connect.post('https://ecp38.is-mis.ru/', params=params, headers=headers, data=data)
@@ -452,7 +454,7 @@ def get_oper_template(connect, medStaffFact_id: str, medPersonal_id: str, ):
         'LpuSection_id': '380101000006029',
         'MedService_id': '',
         'XmlTemplateCat_id': '380101000010968',
-        'UslugaComplex_id': '202879',  # ???
+        'UslugaComplex_id': '202879',  # из кода операции
         'XmlTypeKind_id': '',
         'templName': '',
         'templType': '1',
@@ -460,7 +462,7 @@ def get_oper_template(connect, medStaffFact_id: str, medPersonal_id: str, ):
         'start': '0',
         'EvnClass_id': '43',
         'XmlType_id': '17',
-        'XmlTemplate_id': '380101000224703', # const
+        'XmlTemplate_id': '380101000224703',  # const
     }
 
     response = connect.post('https://ecp38.is-mis.ru/', params=params, headers=headers, data=data)
@@ -579,19 +581,19 @@ def save_all_oper_info(connect,
         'ignoreBallonBegCheck': '0',
         'ignoreCKVEndCheck': '0',
         'accessType': '',
-        'XmlTemplate_id': '380101000224703',
-        'Evn_id': '380101342737176',
-        'EvnUslugaOper_id': '380101342738885', #???
-        'EvnUslugaOper_rid': '0',
+        'XmlTemplate_id': '380101000224703',  # id шаблона протокола операции по 530н приказу
+        'Evn_id': '380101342737176',  # тестировать со значением "0"
+        'EvnUslugaOper_id': '380101342738885',  # ??? найти метод (при сохранении) или указать 0
+        'EvnUslugaOper_rid': '0',  # EvnPS_id (id всей госпитализации)
         'Person_id': person_id,  # из поиска пациента
         'PersonEvn_id': personEvn_id,  # из поиска пациента
         'Server_id': server_id,  # из поиска пациента
         'Morbus_id': '0',
         'IsCardioCheck': '0',
-        'EvnUslugaOper_pid': '380101342737189',  # ???
+        'EvnUslugaOper_pid': '380101342737189',  # EvnSection_id (id внутри госпитализации)
         'EvnDirection_id': '',
         'EvnUslugaOper_setDate': start_date,  # dd.mm.YYYY
-        'EvnUslugaOper_setTime': start_time,
+        'EvnUslugaOper_setTime': start_time,  # hh:mm
         'EvnUslugaOper_disDate': end_date,
         'EvnUslugaOper_disTime': end_time,
         'notDefinedBloodField': '',
@@ -609,7 +611,7 @@ def save_all_oper_info(connect,
         'PolisDMS_id': '',
         'EvnPrescr_id': '',
         'UslugaCategory_id': '4',
-        'UslugaComplex_id': '202879',  # ???
+        'UslugaComplex_id': '202879',  # из кода операции
         'UslugaMedType_id': '',
         'UslugaComplexTariff_id': '',
         'DiagSetClass_id': '',
@@ -646,4 +648,4 @@ def save_all_oper_info(connect,
 session = requests.Session()  # создание сессии подключения
 session.proxies.update(proxies)
 entry(session, login='daa87', password='Daa026')
-print(get_info_code_operation(session, 'A16.03.034.002', '17.06.2024', '629506', '380101369004172'))
+pprint(get_info_code_operation(session, 'А16.03.034', '17.06.2024', '629506', '380101369004172'))

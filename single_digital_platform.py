@@ -171,7 +171,8 @@ def save_EVN(
     }
 
     data = [
-        ('LpuSection_did', ''),
+        ('MesRegion_id', ''),
+        ('LpuSectionBedProfile_id', '380101000000332'),
         ('childPS', 'false'),
         ('EvnPS_IsPLAmbulance', '1'),
         ('Diag_eid', ''),
@@ -196,11 +197,11 @@ def save_EVN(
         ('EvnSection_IsPaid', ''),
         ('EvnPS_IndexRep', ''),
         ('EvnPS_IndexRepInReg', ''),
-        ('Lpu_id', ''),
+        ('Lpu_id', '10379'),  # !
         ('EvnPS_id', '0'),
         ('EvnSectionPriem_id', '0'),
         ('EvnPS_IsTransit', '0'),
-        ('ChildLpuSection_id', '0'),
+        ('ChildLpuSection_id', '380101000015688'),  # !
         ('EvnPS_IsPrehospAcceptRefuse', ''),
         ('EvnPS_PrehospAcceptRefuseDT', ''),
         ('EvnPS_PrehospWaifRefuseDT', ''),
@@ -210,21 +211,21 @@ def save_EVN(
         ('EvnDirectionExt_id', '0'),
         ('EvnQueue_id', '0'),
         ('PrehospStatus_id', '0'),
-        ('Person_id', f'{patient_id}'),
-        ('PersonEvn_id', f'{patient_person_evn_id}'),
-        ('Server_id', f'{patient_server_id}'),
+        ('Person_id', patient_id),
+        ('PersonEvn_id', patient_person_evn_id),
+        ('Server_id', patient_server_id),
         ('EvnPS_IsZNO', '1'),
         ('EvnPS_IsZNORemove', ''),
         ('EvnInfectNotifyPediculos_id', ''),
         ('PrimaryInspectionONMKPatient_id', ''),
         ('EvnInfectNotifyScabies_id', ''),
         ('EvnPS_IsCont', '1'),
-        ('EvnPS_NumCard', f'{numcard}'),
+        ('EvnPS_NumCard', numcard),
         ('PayType_id', '380101000000021'),
         ('PayContract_id', ''),
         ('PolisDMS_id', ''),
-        ('EvnPS_setDate', f'{date_start}'),
-        ('EvnPS_setTime', f'{time_start}'),
+        ('EvnPS_setDate', date_start),
+        ('EvnPS_setTime', time_start),
         ('EvnPS_IsWithoutDirection', '1'),
         ('PrehospDirect_id', other_hosp),  # при плановой госпитализации значение "2" означает другая МО
         ('Org_did', org_id),  # "Org_id"
@@ -311,9 +312,9 @@ def save_EVN(
         ('EvnPS_OutcomeDate', ''),
         ('EvnPS_OutcomeTime', ''),
         ('LeaveType_prmid', ''),
-        ('LpuSection_eid', ''),
+        ('LpuSection_eid', '380101000015688'),  # !
         ('LpuSectionWard_id', ''),
-        ('LpuSectionBedProfileLink_id', ''),
+        ('LpuSectionBedProfileLink_id', '380101000000438'),  # !
         ('PrehospWaifRefuseCause_id', ''),
         ('MesRegion_id', ''),
         ('MedicalCareFormType_id', ''),

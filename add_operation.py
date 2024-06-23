@@ -180,8 +180,8 @@ def get_info_code_operation(connect, code: str, oper_date: str, person_id: str, 
         'nonDispOnly': '1',
         'allowedUslugaComplexAttributeList': '["oper"]',
         'UslugaComplex_Date': oper_date,  # дата операции
-        'PersonAge': '13',  # забирать из запроса на поиск пациента
-        # 'query': code,  # код операции???
+        'PersonAge': '10',  # забирать из запроса на поиск пациента
+        'query': f'A{code}',  # код операции???
         'Person_id': person_id,  # забирать из запроса на поиск пациента
         'uslugaCategoryList': '["gost2011"]',
         'EvnUsluga_pid': evnsection_id,  # EvnSection_id при создании случая госпитализации
@@ -230,7 +230,7 @@ def get_operation_role_team(connect):
     return response.json()
 
 
-def add_operation_member(connect, medPersonal_id: str, medStaffFact_id: str, surgType_id: str):
+def add_operation_member(connect, medPersonal_id: str, evn_usluga_oper_id: str, medStaffFact_id: str, surgType_id: str):
     """Добавление участника операционной бригады"""
 
     headers = {
@@ -259,7 +259,7 @@ def add_operation_member(connect, medPersonal_id: str, medStaffFact_id: str, sur
         'MedPersonal_id': medPersonal_id,
         'EvnUslugaOper_setDate': '03.04.2024',
         'EvnUslugaOperBrig_id': '0',
-        'EvnUslugaOperBrig_pid': '380101342738885',  # ??? видимо id конкретной услуги операции, где брать?
+        'EvnUslugaOperBrig_pid': evn_usluga_oper_id,
         'SurgType_id': surgType_id,  # забирать из get_operation_role_team
         'MedStaffFact_id': medStaffFact_id,
     }
@@ -302,7 +302,7 @@ def get_anesthesia_type(connect):
     return response.json()
 
 
-def save_oper_anesthesia(connect, anesthesiaClass_id: str):
+def save_oper_anesthesia(connect, evn_usluga_oper_anest_id: str, anesthesiaClass_id: str):
     """Сохраняет вид анестезии"""
 
     headers = {
@@ -329,7 +329,7 @@ def save_oper_anesthesia(connect, anesthesiaClass_id: str):
 
     data = {
         'EvnUslugaOperAnest_id': '0',
-        'EvnUslugaOperAnest_pid': '380101342738885',  # ???
+        'EvnUslugaOperAnest_pid': evn_usluga_oper_anest_id,  # id операции
         'AnesthesiaClass_id': anesthesiaClass_id,  # из get_anesthesia_type
     }
 
@@ -469,7 +469,7 @@ def get_oper_template(connect, medStaffFact_id: str, medPersonal_id: str, ):
     return response.json()
 
 
-def create_empty_oper(connect, medStaffFact_id: str):
+def create_empty_oper(connect, evn_id: str, medStaffFact_id: str):
     """Создаёт шаблон протокола операции"""
 
     headers = {
@@ -495,7 +495,7 @@ def create_empty_oper(connect, medStaffFact_id: str):
     }
 
     data = {
-        'Evn_id': '380101342738885',
+        'Evn_id': evn_id,
         'XmlType_id': '17',
         'EvnClass_id': '43',
         'EvnClass_SysNick': 'EvnUslugaOper',
@@ -508,7 +508,7 @@ def create_empty_oper(connect, medStaffFact_id: str):
     return response.json()
 
 
-def update_oper(connect, text: str):
+def update_oper(connect, evn_xml_id: str, text: str):
 
     headers = {
         'accept': '*/*',
@@ -532,8 +532,14 @@ def update_oper(connect, text: str):
         'm': 'updateContent',
     }
 
-    data = f'EvnXml_id=380101034158863&objectIsSigned=Evn&name=descriptionoperation&value=%3Cp%3E{text}%3C%2Fp%3E%3Cp%3E%D0%9E%D1%81%D0%BB%D0%BE%D0%B6%D0%BD%D0%B5%D0%BD%D0%B8%D1%8F%2C%20%D0%B2%D0%BE%D0%B7%D0%BD%D0%B8%D0%BA%D1%88%D0%B8%D0%B5%20%D0%B2%20%D1%85%D0%BE%D0%B4%D0%B5%20%D0%BE%D0%BF%D0%B5%D1%80%D0%B0%D1%82%D0%B8%D0%B2%D0%BD%D0%BE%D0%B3%D0%BE%20%D0%B2%D0%BC%D0%B5%D1%88%D0%B0%D1%82%D0%B5%D0%BB%D1%8C%D1%81%D1%82%D0%B2%D0%B0%20(%D0%BE%D0%BF%D0%B5%D1%80%D0%B0%D1%86%D0%B8%D0%B8)%3A%26nbsp%3B107.%20%D0%9A%D1%80%D0%BE%D0%B2%D0%BE%D1%82%D0%B5%D1%87%D0%B5%D0%BD%D0%B8%D0%B5%3C%2Fp%3E%3Cp%3E%D0%98%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5%20%D0%BC%D0%B5%D0%B4%D0%B8%D1%86%D0%B8%D0%BD%D1%81%D0%BA%D0%B8%D1%85%20%D0%B8%D0%B7%D0%B4%D0%B5%D0%BB%D0%B8%D0%B9%20(%D0%BE%D0%B1%D0%BE%D1%80%D1%83%D0%B4%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F)%20(%D0%AD%D0%BD%D0%B4%D0%BE%D1%81%D0%BA%D0%BE%D0%BF%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%BE%D0%B5%2C%20%D0%BB%D0%B0%D0%B7%D0%B5%D1%80%D0%BD%D0%BE%D0%B5%2C%20%D0%BA%D1%80%D0%B8%D0%BE%D0%B3%D0%B5%D0%BD%D0%BD%D0%BE%D0%B5%2C%20%D1%80%D0%B5%D0%BD%D1%82%D0%B3%D0%B5%D0%BD%D0%BE%D0%B2%D1%81%D0%BA%D0%BE%D0%B5%2C%20%D0%B8%D0%BD%D0%BE%D0%B5)%3A%20%3Cbr%3E%D0%9F%D0%BE%D0%B4%D1%81%D1%87%D0%B5%D1%82%20%D0%BE%D0%BF%D0%B5%D1%80%D0%B0%D1%86%D0%B8%D0%BE%D0%BD%D0%BD%D0%BE%D0%B3%D0%BE%20%D0%BC%D0%B0%D1%82%D0%B5%D1%80%D0%B8%D0%B0%D0%BB%D0%B0%3A%20%D0%B8%D0%BD%D1%81%D1%82%D1%80%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D1%8B%20_____%20%D1%81%D0%B0%D0%BB%D1%84%D0%B5%D1%82%D0%BA%D0%B8%20________%3Cbr%3E%D0%9A%D1%80%D0%BE%D0%B2%D0%BE%D0%BF%D0%BE%D1%82%D0%B5%D1%80%D1%8F%20%D0%B2%D0%BE%20%D0%B2%D1%80%D0%B5%D0%BC%D1%8F%20%D0%BE%D0%BF%D0%B5%D1%80%D0%B0%D1%82%D0%B8%D0%B2%D0%BD%D0%BE%D0%B3%D0%BE%20%D0%B2%D0%BC%D0%B5%D1%88%D0%B0%D1%82%D0%B5%D0%BB%D1%8C%D1%81%D1%82%D0%B2%D0%B0%20(%D0%BE%D0%BF%D0%B5%D1%80%D0%B0%D1%86%D0%B8%D0%B8)%2C%20%D0%BC%D0%BB%3A%20_____________%3C%2Fp%3E&isHTML=1'
-
+    # data = f'EvnXml_id={evn_xml_id}&objectIsSigned=Evn&name=descriptionoperation&value=%3Cp%3E{text}%3C%2Fp%3E%3Cp%3E%D0%9E%D1%81%D0%BB%D0%BE%D0%B6%D0%BD%D0%B5%D0%BD%D0%B8%D1%8F%2C%20%D0%B2%D0%BE%D0%B7%D0%BD%D0%B8%D0%BA%D1%88%D0%B8%D0%B5%20%D0%B2%20%D1%85%D0%BE%D0%B4%D0%B5%20%D0%BE%D0%BF%D0%B5%D1%80%D0%B0%D1%82%D0%B8%D0%B2%D0%BD%D0%BE%D0%B3%D0%BE%20%D0%B2%D0%BC%D0%B5%D1%88%D0%B0%D1%82%D0%B5%D0%BB%D1%8C%D1%81%D1%82%D0%B2%D0%B0%20(%D0%BE%D0%BF%D0%B5%D1%80%D0%B0%D1%86%D0%B8%D0%B8)%3A%26nbsp%3B107.%20%D0%9A%D1%80%D0%BE%D0%B2%D0%BE%D1%82%D0%B5%D1%87%D0%B5%D0%BD%D0%B8%D0%B5%3C%2Fp%3E%3Cp%3E%D0%98%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5%20%D0%BC%D0%B5%D0%B4%D0%B8%D1%86%D0%B8%D0%BD%D1%81%D0%BA%D0%B8%D1%85%20%D0%B8%D0%B7%D0%B4%D0%B5%D0%BB%D0%B8%D0%B9%20(%D0%BE%D0%B1%D0%BE%D1%80%D1%83%D0%B4%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F)%20(%D0%AD%D0%BD%D0%B4%D0%BE%D1%81%D0%BA%D0%BE%D0%BF%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%BE%D0%B5%2C%20%D0%BB%D0%B0%D0%B7%D0%B5%D1%80%D0%BD%D0%BE%D0%B5%2C%20%D0%BA%D1%80%D0%B8%D0%BE%D0%B3%D0%B5%D0%BD%D0%BD%D0%BE%D0%B5%2C%20%D1%80%D0%B5%D0%BD%D1%82%D0%B3%D0%B5%D0%BD%D0%BE%D0%B2%D1%81%D0%BA%D0%BE%D0%B5%2C%20%D0%B8%D0%BD%D0%BE%D0%B5)%3A%20%3Cbr%3E%D0%9F%D0%BE%D0%B4%D1%81%D1%87%D0%B5%D1%82%20%D0%BE%D0%BF%D0%B5%D1%80%D0%B0%D1%86%D0%B8%D0%BE%D0%BD%D0%BD%D0%BE%D0%B3%D0%BE%20%D0%BC%D0%B0%D1%82%D0%B5%D1%80%D0%B8%D0%B0%D0%BB%D0%B0%3A%20%D0%B8%D0%BD%D1%81%D1%82%D1%80%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D1%8B%20_____%20%D1%81%D0%B0%D0%BB%D1%84%D0%B5%D1%82%D0%BA%D0%B8%20________%3Cbr%3E%D0%9A%D1%80%D0%BE%D0%B2%D0%BE%D0%BF%D0%BE%D1%82%D0%B5%D1%80%D1%8F%20%D0%B2%D0%BE%20%D0%B2%D1%80%D0%B5%D0%BC%D1%8F%20%D0%BE%D0%BF%D0%B5%D1%80%D0%B0%D1%82%D0%B8%D0%B2%D0%BD%D0%BE%D0%B3%D0%BE%20%D0%B2%D0%BC%D0%B5%D1%88%D0%B0%D1%82%D0%B5%D0%BB%D1%8C%D1%81%D1%82%D0%B2%D0%B0%20(%D0%BE%D0%BF%D0%B5%D1%80%D0%B0%D1%86%D0%B8%D0%B8)%2C%20%D0%BC%D0%BB%3A%20_____________%3C%2Fp%3E&isHTML=1'
+    data = {
+        'EvnXml_id': evn_xml_id,
+        'objectIsSigned': 'Evn',
+        'name': 'descriptionoperation',
+        'value': text,
+        'isHTML': '1',
+    }
     response = connect.post('https://ecp38.is-mis.ru/', params=params, headers=headers, data=data)
     return response.json()
 
@@ -547,8 +553,12 @@ def save_all_oper_info(connect,
                        start_time: str,
                        end_date: str,
                        end_time: str,
-                       medStaffFact_id: str
-
+                       medStaffFact_id: str,
+                       evn_id: str,  # пока '0'
+                       evnUslugaOper_id: str,  # '0' при первом сохранении, затем меняется от полученного значения
+                       evnPS_id: str,
+                       evnSection_id: str,
+                       oper_code: str
                        ):
     """Сохраняет все данные протокола операции"""
 
@@ -582,15 +592,15 @@ def save_all_oper_info(connect,
         'ignoreCKVEndCheck': '0',
         'accessType': '',
         'XmlTemplate_id': '380101000224703',  # id шаблона протокола операции по 530н приказу
-        'Evn_id': '380101342737176',  # тестировать со значением "0"
-        'EvnUslugaOper_id': '380101342738885',  # ??? найти метод (при сохранении) или указать 0
-        'EvnUslugaOper_rid': '0',  # EvnPS_id (id всей госпитализации)
+        'Evn_id': evn_id,  # тестировать со значением "0"
+        'EvnUslugaOper_id': evnUslugaOper_id,  # ??? найти метод (при сохранении) или указать 0
+        'EvnUslugaOper_rid': evnPS_id,  # EvnPS_id (id всей госпитализации)
         'Person_id': person_id,  # из поиска пациента
         'PersonEvn_id': personEvn_id,  # из поиска пациента
         'Server_id': server_id,  # из поиска пациента
         'Morbus_id': '0',
         'IsCardioCheck': '0',
-        'EvnUslugaOper_pid': '380101342737189',  # EvnSection_id (id внутри госпитализации)
+        'EvnUslugaOper_pid': evnSection_id,  # EvnSection_id (id внутри госпитализации)
         'EvnDirection_id': '',
         'EvnUslugaOper_setDate': start_date,  # dd.mm.YYYY
         'EvnUslugaOper_setTime': start_time,  # hh:mm
@@ -601,7 +611,7 @@ def save_all_oper_info(connect,
         'bloodParams': '',
         'UslugaExecutionReason_id': '',
         'UslugaPlace_id': '1',
-        'LpuSection_uid': '380101000001853',
+        'LpuSection_uid': '380101000015688',  # id отделения (травматология)
         'LpuSectionProfile_id': '380101000000301',
         'MedSpecOms_id': '',
         'MedStaffFact_id': medStaffFact_id,
@@ -611,7 +621,7 @@ def save_all_oper_info(connect,
         'PolisDMS_id': '',
         'EvnPrescr_id': '',
         'UslugaCategory_id': '4',
-        'UslugaComplex_id': '202879',  # из кода операции
+        'UslugaComplex_id': oper_code,  # из кода операции
         'UslugaMedType_id': '',
         'UslugaComplexTariff_id': '',
         'DiagSetClass_id': '',
@@ -645,7 +655,7 @@ def save_all_oper_info(connect,
     return response.json()
 
 
-session = requests.Session()  # создание сессии подключения
-session.proxies.update(proxies)
-entry(session, login='daa87', password='Daa026')
-pprint(get_info_code_operation(session, 'А16.03.034', '17.06.2024', '629506', '380101369004172'))
+# session = requests.Session()  # создание сессии подключения
+# session.proxies.update(proxies)
+# entry(session, login='daa87', password='Daa026')
+# pprint(get_info_code_operation(session, 'А16.03.034', '17.06.2024', '629506', '380101369004172'))

@@ -219,7 +219,7 @@ def extract_patient_data_from_L2(history_number: int) -> dict:
     for direction in directions:
         if direction.get('services') == ['Первичный осмотр']:
             data = get_history_content(session, direction.get('pk'))
-
+            # pprint(data.get('researches')[0].get('research').get('groups'))
             for group in data.get('researches')[0].get('research').get('groups'):
                 if group.get('title') == 'Анамнез заболевания':
                     for item in group.get('fields'):
@@ -227,7 +227,7 @@ def extract_patient_data_from_L2(history_number: int) -> dict:
                         value = item.get('value')
                         if key == 'Диагноз направившего учреждения' and value != '':
                             discharge_summary[key] = value
-                        elif key == 'Направлен' and value == 'по направлению':
+                        elif item.get('pk') == 18733 and value != '- Не выбрано':
                             discharge_summary[key] = value
                             with open('jsonS/hospitals.json', 'r') as file:
                                 hospitals = json.load(file)
@@ -235,8 +235,10 @@ def extract_patient_data_from_L2(history_number: int) -> dict:
                                 discharge_summary['Org_id'] = hospital.get('Org_id')
                         elif key == 'Виды транспортировки' and value != '':
                             discharge_summary[key] = value
+
                         elif key == 'Номер направления' and value != '':
                             discharge_summary[key] = value
+
                         elif (
                                 key == 'Дата выдачи направления' and
                                 value != '' and
@@ -371,4 +373,4 @@ def extract_patient_data_from_L2(history_number: int) -> dict:
     return discharge_summary
 
 
-pprint(extract_patient_data_from_L2(2886975))
+# pprint(extract_patient_data_from_L2(2886975))

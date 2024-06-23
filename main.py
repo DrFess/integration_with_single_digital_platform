@@ -2,6 +2,8 @@ import json
 from datetime import datetime
 import requests
 
+from add_operation import get_info_code_operation, save_all_oper_info, add_operation_member, save_oper_anesthesia, \
+    create_empty_oper, update_oper
 from parse_l2 import extract_patient_data_from_L2, get_patients_from_table
 from settings import proxies
 from single_digital_platform import (
@@ -97,6 +99,89 @@ for item in get_patients_from_table('Q3:Q43'):  # функция получае�
 
             """Здесь должен быть блок функций по протоколу операции"""
 
+            if len(data.get('Протоколы операций')) > 0:
+                who_operate = data.get('Протоколы операций')[0].get('Оперировавший хирург').split(' ')[0]
+                who_operate_med_personal_id = doctors.get(who_operate).get('MedPersonal_id')
+                who_operate_med_staf_fact_id = doctors.get(who_operate).get('MedStaffFact_id')
+
+                current_oper_code = get_info_code_operation(
+                    session,
+                    code=data.get('Протоколы операций')[0].get('Код операции').split(' ')[0].rstrip('.').lstrip(
+                        'A').lstrip('А'),
+                    oper_date=data.get('Протоколы операций')[0].get('Дата проведения'),
+                    person_id=patient,
+                    evnsection_id=evn_card.get('EvnSection_id')
+                )
+
+                first_oper_save = save_all_oper_info(
+                    session,
+                    medPersonal_id=med_personal_id,
+                    person_id=patient,
+                    personEvn_id=search.get('data')[0].get('PersonEvn_id'),
+                    server_id=search.get('data')[0].get('Server_id'),
+                    start_date=data.get('Протоколы операций')[0].get('Дата проведения'),
+                    start_time=data.get('Протоколы операций')[0].get('Время начала'),
+                    end_date=data.get('Протоколы операций')[0].get('Дата проведения'),
+                    end_time=data.get('Протоколы операций')[0].get('Время окончания'),
+                    medStaffFact_id=med_staff_fact_id,
+                    evn_id='0',
+                    evnUslugaOper_id='0',
+                    evnPS_id=evn_card.get('EvnPS_id'),
+                    evnSection_id=evn_card.get('EvnSection_id'),
+                    oper_code=current_oper_code[0].get('UslugaComplex_id')
+                )
+                oper_id = first_oper_save.get(
+                    'EvnUslugaOper_id')  # возвращает EvnUslugaOper_id == EvnUslugaOperBrig_pid
+
+                first_operation_member = add_operation_member(
+                    session,
+                    medPersonal_id=who_operate_med_personal_id,
+                    evn_usluga_oper_id=oper_id,
+                    medStaffFact_id=who_operate_med_staf_fact_id,
+                    surgType_id='1'
+                )
+                anesthesiolog = data.get('Протоколы операций')[0].get('Анестезиолог')
+                with open('jsonS/empoyees.json', 'r') as file:
+                    doctors_list = json.load(file)
+                for doctor in doctors_list:
+                    if anesthesiolog == doctor.get('MedPersonal_Fin') and doctor.get(
+                            'WorkData_MedStaff_endDate') is None:
+                        anesthesiolog_med_personal_id = doctor.get('MedPersonal_id')
+                        anesthesiolog_staf_fact_id = doctor.get('MedStaffFact_id')
+                        add_operation_member(
+                            session,
+                            medPersonal_id=anesthesiolog_med_personal_id,
+                            evn_usluga_oper_id=oper_id,
+                            medStaffFact_id=anesthesiolog_staf_fact_id,
+                            surgType_id='4'
+                        )
+                        break
+
+                if data.get('Протоколы операций')[0].get('Вид анестезии') == 'ЭТН':
+                    anesthesia_class_id = '4'
+                elif data.get('Протоколы операций')[0].get('Вид анестезии') == 'АМН':
+                    anesthesia_class_id = '5'
+                else:
+                    anesthesia_class_id = '21'
+
+                operation_anesthesia = save_oper_anesthesia(
+                    session,
+                    evn_usluga_oper_anest_id=oper_id,
+                    anesthesiaClass_id=anesthesia_class_id
+                )
+
+                operation_template = create_empty_oper(
+                    session,
+                    evn_id=oper_id,
+                    medStaffFact_id=med_staff_fact_id
+                )
+
+                update_oper(
+                    session,
+                    evn_xml_id=operation_template.get('EvnXml_id'),
+                    text=data.get('Протоколы операций')[0].get('Ход операции')
+                )
+
             fourth_step = save_data(  # функция переводит пациента в выписанные
                 session,
                 date_start=data.get('Дата поступления'),
@@ -139,7 +224,6 @@ for item in get_patients_from_table('Q3:Q43'):  # функция получае�
                      f'\n{data.get("Ограничение физических нагрузок")}\n{data.get("Уход за послеоперационной раной")}\n'
             )
             print(f'{data.get("Фамилия")} в ЕЦП загружен')
-            print(data)
             with open('uploaded_stories.txt', 'a') as file:
                 file.write(f'{datetime.now()}: {data.get("Фамилия")} в ЕЦП загружен\n')
         except Exception as error:

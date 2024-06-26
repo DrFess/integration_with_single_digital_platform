@@ -263,6 +263,8 @@ def extract_patient_data_from_L2(history_number: int) -> dict:
                             operation_time_start = item.get('value')
                         elif '.' in item.get('value'):
                             operation_time_start = item.get('value').replace('.', ':')
+                        elif '-' in item.get('value'):
+                            operation_time_start = item.get('value').replace('-', ':')
                         elif len(item.get('value')) < 4:
                             operation_time_start = f'0{item.get("value")}'
                         else:

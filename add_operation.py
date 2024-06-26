@@ -2,7 +2,7 @@ from pprint import pprint
 
 import requests
 
-from settings import proxies
+from settings import proxies, XML_TEMPLATE_ID_OPERATION
 from single_digital_platform import entry
 
 
@@ -462,7 +462,7 @@ def get_oper_template(connect, medStaffFact_id: str, medPersonal_id: str, ):
         'start': '0',
         'EvnClass_id': '43',
         'XmlType_id': '17',
-        'XmlTemplate_id': '380101000224703',  # const
+        'XmlTemplate_id': XML_TEMPLATE_ID_OPERATION,  # const
     }
 
     response = connect.post('https://ecp38.is-mis.ru/', params=params, headers=headers, data=data)
@@ -501,7 +501,7 @@ def create_empty_oper(connect, evn_id: str, medStaffFact_id: str):
         'EvnClass_SysNick': 'EvnUslugaOper',
         'Server_id': '38',
         'MedStaffFact_id': medStaffFact_id,
-        'XmlTemplate_id': '380101000224703',
+        'XmlTemplate_id': XML_TEMPLATE_ID_OPERATION,
     }
 
     response = connect.post('https://ecp38.is-mis.ru/', params=params, headers=headers, data=data)
@@ -532,7 +532,6 @@ def update_oper(connect, evn_xml_id: str, text: str):
         'm': 'updateContent',
     }
 
-    # data = f'EvnXml_id={evn_xml_id}&objectIsSigned=Evn&name=descriptionoperation&value=%3Cp%3E{text}%3C%2Fp%3E%3Cp%3E%D0%9E%D1%81%D0%BB%D0%BE%D0%B6%D0%BD%D0%B5%D0%BD%D0%B8%D1%8F%2C%20%D0%B2%D0%BE%D0%B7%D0%BD%D0%B8%D0%BA%D1%88%D0%B8%D0%B5%20%D0%B2%20%D1%85%D0%BE%D0%B4%D0%B5%20%D0%BE%D0%BF%D0%B5%D1%80%D0%B0%D1%82%D0%B8%D0%B2%D0%BD%D0%BE%D0%B3%D0%BE%20%D0%B2%D0%BC%D0%B5%D1%88%D0%B0%D1%82%D0%B5%D0%BB%D1%8C%D1%81%D1%82%D0%B2%D0%B0%20(%D0%BE%D0%BF%D0%B5%D1%80%D0%B0%D1%86%D0%B8%D0%B8)%3A%26nbsp%3B107.%20%D0%9A%D1%80%D0%BE%D0%B2%D0%BE%D1%82%D0%B5%D1%87%D0%B5%D0%BD%D0%B8%D0%B5%3C%2Fp%3E%3Cp%3E%D0%98%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5%20%D0%BC%D0%B5%D0%B4%D0%B8%D1%86%D0%B8%D0%BD%D1%81%D0%BA%D0%B8%D1%85%20%D0%B8%D0%B7%D0%B4%D0%B5%D0%BB%D0%B8%D0%B9%20(%D0%BE%D0%B1%D0%BE%D1%80%D1%83%D0%B4%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F)%20(%D0%AD%D0%BD%D0%B4%D0%BE%D1%81%D0%BA%D0%BE%D0%BF%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%BE%D0%B5%2C%20%D0%BB%D0%B0%D0%B7%D0%B5%D1%80%D0%BD%D0%BE%D0%B5%2C%20%D0%BA%D1%80%D0%B8%D0%BE%D0%B3%D0%B5%D0%BD%D0%BD%D0%BE%D0%B5%2C%20%D1%80%D0%B5%D0%BD%D1%82%D0%B3%D0%B5%D0%BD%D0%BE%D0%B2%D1%81%D0%BA%D0%BE%D0%B5%2C%20%D0%B8%D0%BD%D0%BE%D0%B5)%3A%20%3Cbr%3E%D0%9F%D0%BE%D0%B4%D1%81%D1%87%D0%B5%D1%82%20%D0%BE%D0%BF%D0%B5%D1%80%D0%B0%D1%86%D0%B8%D0%BE%D0%BD%D0%BD%D0%BE%D0%B3%D0%BE%20%D0%BC%D0%B0%D1%82%D0%B5%D1%80%D0%B8%D0%B0%D0%BB%D0%B0%3A%20%D0%B8%D0%BD%D1%81%D1%82%D1%80%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D1%8B%20_____%20%D1%81%D0%B0%D0%BB%D1%84%D0%B5%D1%82%D0%BA%D0%B8%20________%3Cbr%3E%D0%9A%D1%80%D0%BE%D0%B2%D0%BE%D0%BF%D0%BE%D1%82%D0%B5%D1%80%D1%8F%20%D0%B2%D0%BE%20%D0%B2%D1%80%D0%B5%D0%BC%D1%8F%20%D0%BE%D0%BF%D0%B5%D1%80%D0%B0%D1%82%D0%B8%D0%B2%D0%BD%D0%BE%D0%B3%D0%BE%20%D0%B2%D0%BC%D0%B5%D1%88%D0%B0%D1%82%D0%B5%D0%BB%D1%8C%D1%81%D1%82%D0%B2%D0%B0%20(%D0%BE%D0%BF%D0%B5%D1%80%D0%B0%D1%86%D0%B8%D0%B8)%2C%20%D0%BC%D0%BB%3A%20_____________%3C%2Fp%3E&isHTML=1'
     data = {
         'EvnXml_id': evn_xml_id,
         'objectIsSigned': 'Evn',
@@ -653,9 +652,3 @@ def save_all_oper_info(connect,
 
     response = connect.post('https://ecp38.is-mis.ru/', params=params, headers=headers, data=data)
     return response.json()
-
-
-# session = requests.Session()  # создание сессии подключения
-# session.proxies.update(proxies)
-# entry(session, login='daa87', password='Daa026')
-# pprint(get_info_code_operation(session, 'А16.03.034', '17.06.2024', '629506', '380101369004172'))

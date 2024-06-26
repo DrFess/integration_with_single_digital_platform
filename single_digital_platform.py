@@ -738,7 +738,7 @@ def get_KSG_KOEF(connect, date_start: str, date_end: str, patient_id: str, diagn
         'EvnSection_IndexRep': '',
         'EvnSection_IndexRepInReg': '',
         'EvnSection_pid': '',
-        'LpuSection_id': '380101000006029',
+        'LpuSection_id': '380101000015688',
         'LpuSectionBedProfile_id': '380101000000332',
         'LpuSectionProfile_id': '380101000000301',
         'LpuUnitType_id': '1',

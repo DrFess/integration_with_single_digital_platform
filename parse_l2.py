@@ -217,6 +217,7 @@ def extract_patient_data_from_L2(history_number: int) -> dict:
     discharge_summary['Дата рождения'] = birthday.strip().split()[0]
 
     for direction in directions:
+        pprint(direction)
         if direction.get('services') == ['Первичный осмотр']:
             data = get_history_content(session, direction.get('pk'))
             # pprint(data.get('researches')[0].get('research').get('groups'))
@@ -373,6 +374,3 @@ def extract_patient_data_from_L2(history_number: int) -> dict:
             data = get_result_obtains(direction.get('pk'))
             discharge_summary['Анализы'] += data
     return discharge_summary
-
-
-# pprint(extract_patient_data_from_L2(2886975))

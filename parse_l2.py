@@ -1,5 +1,3 @@
-from pprint import pprint
-
 import requests
 import json
 from settings import proxies, login_l2, password_l2
@@ -217,10 +215,8 @@ def extract_patient_data_from_L2(history_number: int) -> dict:
     discharge_summary['Дата рождения'] = birthday.strip().split()[0]
 
     for direction in directions:
-        pprint(direction)
         if direction.get('services') == ['Первичный осмотр']:
             data = get_history_content(session, direction.get('pk'))
-            # pprint(data.get('researches')[0].get('research').get('groups'))
             for group in data.get('researches')[0].get('research').get('groups'):
                 if group.get('title') == 'Анамнез заболевания':
                     for item in group.get('fields'):
@@ -253,7 +249,6 @@ def extract_patient_data_from_L2(history_number: int) -> dict:
             operation_info_for_append = {}
             data = get_history_content(session, direction.get('pk'))
             operation_info = data.get('researches')[0].get('research').get('groups')
-            # pprint(operation_info[0].get('fields'))
             for index in range(0, len(operation_info)):
                 for item in operation_info[index].get('fields'):
                     if item.get('title') == 'Дата проведения':
@@ -307,8 +302,7 @@ def extract_patient_data_from_L2(history_number: int) -> dict:
                     elif item.get('title') == 'Осложнения':
                         operation_info_for_append['Осложнения'] = item.get('value')
             discharge_summary['Протоколы операций'].append(operation_info_for_append)
-            # print(operation_info_for_append)
-            # print('_______________________________')
+
         elif direction.get('services') == ['Выписка -тр']:
             data = get_history_content(session, direction.get('pk'))
             who_confirmed = data.get('patient').get('doc').split(' ')[0]

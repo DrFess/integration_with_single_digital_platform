@@ -10,45 +10,47 @@ from read_xlsx import read_xlsx
 from settings import DOCTORS_LIST, login_l2, password_l2, proxies
 from single_digital_platform import entry, mkb
 
-test = read_xlsx('/Users/aleksejdegtarev/PycharmProjects/integration_with_single_digital_platform/daily_report/tables/26.06.24 первич.xlsx')
+
+test = read_xlsx('/Users/aleksejdegtarev/PycharmProjects/integration_with_single_digital_platform/daily_report/tables/29.06.2024 первичные.xlsx')
 for item in test:
-    if item[0] is not None:
-        number = item[1].split(' ')[0]
-        doctor_surname = item[12].split(' ')[0]
+    try:
+        if item[0] is not None:
+            number = item[1].split(' ')[0]
+            doctor_surname = item[12].split(' ')[0]
 
-        """Блок получения данных из L2"""
-        session = requests.Session()
-        authorization_l2(session, login=login_l2, password=password_l2)
-        data_for_ecp = get_ready_data(session, number)
-        session.close()
-        with open('/Users/aleksejdegtarev/PycharmProjects/integration_with_single_digital_platform/jsonS/doctors.json', 'r') as file:
-            doctors = json.load(file)
-
-        """Блок выгрузки в ЕЦП"""
-        if doctor_surname in DOCTORS_LIST:
-            login = doctors.get(doctor_surname).get('login')
-            password = doctors.get(doctor_surname).get('password')
-            med_personal_id = doctors.get(doctor_surname).get('MedPersonal_id')
-            med_staff_fact_id = doctors.get(doctor_surname).get('MedStaffFact_id')
-
+            """Блок получения данных из L2"""
             session = requests.Session()
-            session.proxies.update(proxies)
+            authorization_l2(session, login=login_l2, password=password_l2)
+            data_for_ecp = get_ready_data(session, number)
+            session.close()
+            with open('/Users/aleksejdegtarev/PycharmProjects/integration_with_single_digital_platform/jsonS/doctors.json', 'r') as file:
+                doctors = json.load(file)
 
-            authorization = entry(session, login=login, password=password)
+            """Блок выгрузки в ЕЦП"""
+            if doctor_surname in DOCTORS_LIST:
+                login = doctors.get(doctor_surname).get('login')
+                password = doctors.get(doctor_surname).get('password')
+                med_personal_id = doctors.get(doctor_surname).get('MedPersonal_id')
+                med_staff_fact_id = doctors.get(doctor_surname).get('MedStaffFact_id')
 
-            patient_data = search_patients_ext6(
-                session,
-                surname=data_for_ecp.get('Фамилия'),
-                name=data_for_ecp.get('Имя'),
-                patronymic=data_for_ecp.get('Отчество').strip(','),
-                birthday=data_for_ecp.get('Дата рождения')
-            )
+                session = requests.Session()
+                session.proxies.update(proxies)
 
-            for_number = date_in_milliseconds()
-            pl_number = get_evn_pl_number(session, for_number)
+                authorization = entry(session, login=login, password=password)
 
-            correct_format_date = '.'.join(data_for_ecp.get('Дата осмотра').split('-')[::-1])
-            try:
+                patient_data = search_patients_ext6(
+                    session,
+                    surname=data_for_ecp.get('Фамилия'),
+                    name=data_for_ecp.get('Имя'),
+                    patronymic=data_for_ecp.get('Отчество').strip(','),
+                    birthday=data_for_ecp.get('Дата рождения')
+                )
+
+                for_number = date_in_milliseconds()
+                pl_number = get_evn_pl_number(session, for_number)
+
+                correct_format_date = '.'.join(data_for_ecp.get('Дата осмотра').split('-')[::-1])
+
                 first_save = save_first_data_vizit(
                     session,
                     med_staff_fact_id=med_staff_fact_id,
@@ -124,8 +126,14 @@ for item in test:
                     text_diag=data_for_ecp.get('Диагноз'),
                     diag_w='13950',  # пока так оставить, но нужен справочник id обстоятельств травм по МКБ
                 )
-            except Exception as error:
-                print(error)
 
-            print(data_for_ecp.get('Фамилия'), 'выгружен!')
-            session.close()
+                print(data_for_ecp.get('Фамилия'), 'выгружен!')
+                session.close()
+            else:
+                print(f'{doctor_surname} нет в DOCTORS_LIST')
+    except KeyError as error:
+        print(f'{data_for_ecp.get("Фамилия")}: evn_xml_id=template_number[0].get("EvnXml_id")')
+    except AttributeError as error:
+        print(f"{data_for_ecp.get('Фамилия')}: correct_format_date = '.'.join(data_for_ecp.get('Дата осмотра').split('-')[::-1])")
+    except Exception as error:
+        print(f'{data_for_ecp.get("Фамилия")}: {error}')

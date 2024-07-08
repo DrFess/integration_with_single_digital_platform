@@ -1,3 +1,5 @@
+from pprint import pprint
+
 from parse_l2 import get_history_content
 
 
@@ -76,8 +78,8 @@ def get_history(connect, pk_number: int):
         'forHospSlave': False,
         'type': 3,
         'patient': pk_number,
-        'date_from': '01.01.2024',
-        'date_to': '01.07.2024',
+        'date_from': '01.07.2024',
+        'date_to': '01.08.2024',
     }
 
     response = connect.post(
@@ -94,11 +96,10 @@ def get_ready_data(connect, number_from_table) -> dict:
     for data_item in raw_data:
         if 'Карта' in data_item:
             cart_number = data_item[1].split(' ')[0]
-
             pk = get_patient_pk(connect, cart_number)
 
             for item in get_history(connect, pk):
-                if 'Консультация травматолога' in item.get('researches'):
+                if 'Консультация травматолога (первичный прием)' in item.get('researches'):
                     doctor = get_history_content(connect, item.get('pk')).get('researches')[0].get('whoConfirmed').split(',')[0]
                     fio_age = get_history_content(connect, item.get('pk')).get('patient').get('fio_age').split(' ')
                     surname = fio_age[0]

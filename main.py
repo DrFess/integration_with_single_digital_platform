@@ -34,7 +34,7 @@ for item in get_patients_from_table('Q3:Q43'):  # функция получае�
         login = doctors.get(doctor_surname).get('login')  # получаем логин по фамилии лечащего врача из data
         password = doctors.get(doctor_surname).get('password')  # получаем пароль по фамилии лечащего врача из data
         med_personal_id = doctors.get(doctor_surname).get('MedPersonal_id')  # получаем персональное id по фамилии лечащего врача из data
-        med_staff_fact_id = doctors.get(doctor_surname).get('MedStaffFact_id')  # получаем рабочее id по фамилии лечащего врача из data
+        med_staff_fact_id = doctors.get(doctor_surname).get('MedStaffFact_id_stac')  # получаем рабочее id по фамилии лечащего врача из data
 
         authorization = entry(session, login=login, password=password)  # авторизация в ЕЦП с данными лечащего врача
 

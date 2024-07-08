@@ -11,7 +11,7 @@ from settings import DOCTORS_LIST, login_l2, password_l2, proxies
 from single_digital_platform import entry, mkb
 
 
-test = read_xlsx('/Users/aleksejdegtarev/PycharmProjects/integration_with_single_digital_platform/daily_report/tables/29.06.2024 первичные.xlsx')
+test = read_xlsx('/Users/aleksejdegtarev/PycharmProjects/integration_with_single_digital_platform/daily_report/tables/06.07.2024 первичные.xlsx')
 for item in test:
     try:
         if item[0] is not None:

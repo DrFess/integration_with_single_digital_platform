@@ -1179,3 +1179,40 @@ def get_list_of_discharge_notes_for_signature(connect):  # разобрать!!!
 
     response = connect.post('https://ecp38.is-mis.ru/', params=params, headers=headers, data=data)
     return response.json()
+
+
+def save_implant_type_link(connect):
+    """Добавляет имплантированное изделие (тестировать)"""
+    headers = {
+        'accept': '*/*',
+        'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
+        'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'dnt': '1',
+        'origin': 'https://ecp38.is-mis.ru',
+        'priority': 'u=1, i',
+        'referer': 'https://ecp38.is-mis.ru/?c=promed',
+        'sec-ch-ua': '"Not/A)Brand";v="8", "Chromium";v="126", "Google Chrome";v="126"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"macOS"',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-origin',
+        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+        'x-requested-with': 'XMLHttpRequest',
+    }
+
+    params = {
+        'c': 'EvnUsluga',
+        'm': 'saveEvnUslugaImplantTypeLink',
+    }
+
+    data = {
+        'EvnUslugaImplantTypeLink_id': '',
+        'EvnUsluga_id': '380101377379452',  # EvnUslugaOper_id
+        'ImplantType_id': '789',  # из implant_info.json
+        'EvnUslugaImplantTypeLink_SerNum': '',  # серийный номер
+        'ImplantType_Name': 'Стержень интрамедуллярный для локтевой кости, стерильный',   # из implant_info.json, можно не указывать
+    }
+
+    response = connect.post('https://ecp38.is-mis.ru/', params=params, headers=headers, data=data).json()
+    return response

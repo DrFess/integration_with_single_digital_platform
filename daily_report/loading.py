@@ -4,14 +4,14 @@ import requests
 
 from daily_report.data_for_trauma_point import get_ready_data
 from daily_report.trauma_point import search_patients_ext6, date_in_milliseconds, get_evn_pl_number, \
-    save_first_data_vizit, save_visit, create_template, save_text_protocol, finished
+    save_first_data_vizit, save_visit, create_template, save_text_protocol, finished, add_initial_examination_service
 from parse_l2 import authorization_l2
 from read_xlsx import read_xlsx
 from settings import DOCTORS_LIST, login_l2, password_l2, proxies
 from single_digital_platform import entry, mkb
 
 
-test = read_xlsx('/Users/aleksejdegtarev/PycharmProjects/integration_with_single_digital_platform/daily_report/tables/06.07.2024 первичные.xlsx')
+test = read_xlsx('/Users/aleksejdegtarev/PycharmProjects/integration_with_single_digital_platform/daily_report/tables/12.07.2024 первичные.xlsx')
 for item in test:
     try:
         if item[0] is not None:
@@ -79,6 +79,19 @@ for item in test:
                     diagnos_text=data_for_ecp.get('Диагноз'),
                 )
 
+                examination_service = add_initial_examination_service(
+                    session,
+                    evn_id=first_save.get('EvnVizitPL_id'),
+                    medpersonal_id=med_personal_id,
+                    person_id=patient_data[0].get('Person_id'),
+                    personevn_id=patient_data[0].get('PersonEvn_id'),
+                    server_id=patient_data[0].get('Server_id'),
+                    medstafffact_id=med_staff_fact_id,
+                    exam_date=correct_format_date,
+                    start_time=data_for_ecp.get('Время осмотра'),
+                    end_time=data_for_ecp.get('Время осмотра')
+                )
+
                 for_template = date_in_milliseconds()
                 template_number = create_template(
                     session,
@@ -134,6 +147,6 @@ for item in test:
     except KeyError as error:
         print(f'{data_for_ecp.get("Фамилия")}: evn_xml_id=template_number[0].get("EvnXml_id")')
     except AttributeError as error:
-        print(f"{data_for_ecp.get('Фамилия')}: correct_format_date = '.'.join(data_for_ecp.get('Дата осмотра').split('-')[::-1])")
+        print(f"{data_for_ecp.get('Фамилия')}: attr {error}")
     except Exception as error:
         print(f'{data_for_ecp.get("Фамилия")}: {error}')

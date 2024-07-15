@@ -364,6 +364,99 @@ def save_text_protocol(
     return response
 
 
+def add_initial_examination_service(
+        connect,
+        evn_id: str,
+        medpersonal_id: str,
+        person_id: str,
+        personevn_id: str,
+        server_id: str,
+        medstafffact_id: str,
+        exam_date: str,
+        start_time: str,
+        end_time: str,
+):
+    """Добавляет услугу первичного приема травматологом"""
+
+    headers = {
+        'accept': '*/*',
+        'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
+        'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'dnt': '1',
+        'origin': 'https://ecp38.is-mis.ru',
+        'priority': 'u=1, i',
+        'referer': 'https://ecp38.is-mis.ru/?c=promed',
+        'sec-ch-ua': '"Not/A)Brand";v="8", "Chromium";v="126", "Google Chrome";v="126"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"macOS"',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-origin',
+        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+        'x-requested-with': 'XMLHttpRequest',
+    }
+
+    params = {
+        'c': 'EvnUsluga',
+        'm': 'saveEvnUslugaCommon',
+    }
+
+    data = {
+        'EvnUslugaCommon_Price': '0',
+        'EvnUslugaCommon_Summa': '0.00',
+        'ignoreParentEvnDateCheck': '0',
+        'ignorePaidCheck': '',
+        'CovidContingentType_id': 'null',
+        'PersonDisp_ids': '[]',
+        'isPaidUsluga': 'false',
+        'EvnUslugaComplexPlanLink_id': '',
+        'PayDocEvnPersonalAgreementsLink_paguid': '',
+        'accessType': '',
+        'EvnClass_SysNick': 'EvnUslugaCommon',
+        'EvnUslugaCommon_id': '',
+        'EvnUslugaCommon_rid': '0',
+        'Evn_id': evn_id,  # first_save.get('EvnVizitPL_id')
+        'EvnDirection_id': '',
+        'MedPersonal_id': medpersonal_id,  # из doctors.json
+        'Morbus_id': '-1',
+        'Person_id': person_id,  # из search_patient
+        'PersonEvn_id': personevn_id,  # patient_data[0].get('PersonEvn_id')
+        'Server_id': server_id,
+        'EvnUslugaCommon_pid': evn_id,  # first_save.get('EvnVizitPL_id')
+        'EvnUslugaCommon_setDate': exam_date,  # dd.mm.YYYY
+        'EvnUslugaCommon_setTime': start_time,  # hh:mm
+        'EvnUslugaCommon_disDate': exam_date,  # dd.mm.YYYY
+        'EvnUslugaCommon_disTime': end_time,  # hh:mm
+        'UslugaExecutionType_id': 'null',
+        'UslugaExecutionReason_id': 'null',
+        'UslugaPlace_id': '1',
+        'LpuSection_uid': '380101000015788',  # const
+        'LpuSectionProfile_id': '380101000000301',  # const
+        'Lpu_uid': 'null',
+        'Org_uid': 'null',
+        'MedSpecOms_id': 'null',
+        'MedStaffFact_id': medstafffact_id,  # из doctors.json
+        'MedStaffFact_sid': 'null',
+        'PayType_id': '380101000000021',  # const
+        'PayContract_id': 'null',
+        'PersonalAgreements_id': '',
+        'PolisDMS_id': 'null',
+        'EvnPrescr_id': 'null',
+        'UslugaCategory_id': '4',
+        'UslugaComplex_id': '206696',  # id первичного осмотра травматологом
+        'smoPersonFio': '',
+        'smoComment': 'Укажите количество согласованных услуг и дату окончания согласования',
+        'UslugaComplexTariff_id': 'null',
+        'DiagSetClass_id': 'null',
+        'Diag_id': 'null',
+        'PersonDisp_id': '',
+        'EvnUslugaCommon_Kolvo': '1',
+    }
+
+    response = connect.post('https://ecp38.is-mis.ru/', params=params, headers=headers, data=data).json()
+    return response
+
+
 def finished(
         connect,
         evn_pl_id: str,

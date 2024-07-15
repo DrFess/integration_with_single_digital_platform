@@ -33,7 +33,7 @@ def get_ECP_departments_data(ses, department_id):
 
     data = {
         'Person_Surname': '',
-        'EvnSection_disDate_Range': '01.06.2024 - 30.06.2024',
+        'EvnSection_disDate_Range': '01.07.2024 - 31.07.2024',
         'LpuSection_cid': f'{department_id}',
         'isLeave': '1',
         'PersonCardStateType_id': '1',
@@ -63,7 +63,7 @@ path_to_excel_tabel = '/Users/aleksejdegtarev/Desktop/ЕЦП выгрузка.xl
 
 for department in data:
     response = get_ECP_departments_data(session, data.get(department)[1])
-    index = f'S{data.get(department)[0]}'
+    index = f'R{data.get(department)[0]}'
     value = response.get('totalCount')
     edit_xlsx_ECP_table(
         path=path_to_excel_tabel,
@@ -73,4 +73,4 @@ for department in data:
     print(department, response.get('totalCount'))
 
 for item in range(3, 25):
-    cell_color_edit(path_to_excel_tabel, f'P{item}')
+    cell_color_edit(path_to_excel_tabel, f'T{item}')

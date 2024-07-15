@@ -1,3 +1,4 @@
+from datetime import datetime
 from pprint import pprint
 
 import requests
@@ -582,9 +583,9 @@ def save_expertise(connect, pk_third: int, pk_second: int, examination_date: str
                     'title': 'По умолчанию',
                 },
             ],
-            'saved': False,
-            'confirmed': False,
-            'confirmed_at': None,
+            'saved': True,
+            'confirmed': True,
+            'confirmed_at': int(datetime.now().timestamp() * 1000),
             'allow_reset_confirm': False,
             'more': [],
             'sub_directions': [],
@@ -607,8 +608,8 @@ def save_expertise(connect, pk_third: int, pk_second: int, examination_date: str
             'whoExecuted': None,
             'countFiles': 0,
             'direction': {
-                'pk': 2957054,
-                'date': '07.07.2024',
+                'pk': pk_second,
+                'date': '.'.join(examination_date.split('-')[::-1]),
                 'all_confirmed': False,
                 'diagnos': '',
                 'fin_source': 'ОМС',
@@ -670,11 +671,15 @@ session = requests.Session()
 
 authorization_l2(session, login_l2, password_l2)
 
-# first = get_extract_number_by_number_history(session, 2926888)
-# print('Номер выписки: ', first)
-#
-# second = create_expertise(session, first)
-# print(second)
+first = get_extract_number_by_number_history(session, 2926650)
+print('Номер выписки: ', first)
 
-third = get_info_expertise(session, 2957086)
-pprint(third)
+second = create_expertise(session, first)
+print(second)
+
+third = get_info_expertise(session, second)
+print(third)
+
+finish = save_expertise(session, second, third.get('pk_third'), third.get('date'))
+
+pprint(finish)

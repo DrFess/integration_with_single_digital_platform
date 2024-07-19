@@ -1181,7 +1181,7 @@ def get_list_of_discharge_notes_for_signature(connect):  # разобрать!!!
     return response.json()
 
 
-def save_implant_type_link(connect):
+def save_implant_type_link(connect, evn_usluga_oper_id: str, implant_id: str, implant_name: str):
     """Добавляет имплантированное изделие (тестировать)"""
     headers = {
         'accept': '*/*',
@@ -1208,10 +1208,10 @@ def save_implant_type_link(connect):
 
     data = {
         'EvnUslugaImplantTypeLink_id': '',
-        'EvnUsluga_id': '380101377379452',  # EvnUslugaOper_id
-        'ImplantType_id': '789',  # из implant_info.json
+        'EvnUsluga_id': evn_usluga_oper_id,  # EvnUslugaOper_id
+        'ImplantType_id': implant_id,  # из implant_info.json
         'EvnUslugaImplantTypeLink_SerNum': '',  # серийный номер
-        'ImplantType_Name': 'Стержень интрамедуллярный для локтевой кости, стерильный',   # из implant_info.json, можно не указывать
+        'ImplantType_Name': implant_name,   # из implant_info.json, можно не указывать
     }
 
     response = connect.post('https://ecp38.is-mis.ru/', params=params, headers=headers, data=data).json()

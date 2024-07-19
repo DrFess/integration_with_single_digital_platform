@@ -16,7 +16,9 @@ from single_digital_platform import (
     mkb,
     create_template,
     update_treatment_evn_template,
-    update_recommendation_evn_template, update_research_evn_template
+    update_recommendation_evn_template,
+    update_research_evn_template,
+    save_implant_type_link
 )
 
 
@@ -181,6 +183,26 @@ for item in get_patients_from_table('Q3:Q43'):  # функция получае�
                     evn_xml_id=operation_template.get('EvnXml_id'),
                     text=data.get('Протоколы операций')[0].get('Ход операции')
                 )
+
+                """Блок добавления импланта"""
+                count_implants_in_oper = int(data.get('Протоколы операций')[0].get('Количество имплантов'))
+                implants_in_oper = data.get('Протоколы операций')[0].get('Импланты')
+                for implant in implants_in_oper:
+                    if 'спица' in implant or 'nail' in implant or 'стержень' in implant:
+                        implant_id = '856'  # стержень
+                        implant_title = 'Стержень костный ортопедический, нерассасывающийся'
+                    elif 'винт' in implant:
+                        implant_id = '857'  # винт
+                        implant_title = 'Винт костный ортопедический, нерассасывающийся, стерильный'
+                    else:
+                        implant_id = '930'  # нить
+                        implant_title = 'Нить хирургическая из поли(L-лактид-ко-капролактона)'
+                    adding_implant = save_implant_type_link(
+                        session,
+                        evn_usluga_oper_id=oper_id,
+                        implant_id=implant_id,
+                        implant_name=implant_title
+                    )
 
             fourth_step = save_data(  # функция переводит пациента в выписанные
                 session,

@@ -1,6 +1,8 @@
+from pprint import pprint
+
 import requests
 import json
-from settings import proxies, login_l2, password_l2
+from settings import proxies, login_l2, password_l2, IMPLANT_FIELDS
 
 import gspread
 
@@ -301,6 +303,12 @@ def extract_patient_data_from_L2(history_number: int) -> dict:
                         operation_info_for_append['Вид анестезии'] = item.get('value')
                     elif item.get('title') == 'Осложнения':
                         operation_info_for_append['Осложнения'] = item.get('value')
+                    elif item.get('title') == 'Количество использованных металлоконструкций':
+                        operation_info_for_append['Количество имплантов'] = item.get('value')
+                        operation_info_for_append['Импланты'] = []
+                    elif item.get('pk') in IMPLANT_FIELDS:
+                        if item.get('value') != '- Не выбрано':
+                            operation_info_for_append['Импланты'].append(item.get('value'))
             discharge_summary['Протоколы операций'].append(operation_info_for_append)
 
         elif direction.get('services') == ['Выписка -тр']:

@@ -1,6 +1,10 @@
+from datetime import datetime
+from datetime import timedelta
 from pprint import pprint
+import requests
 
-from parse_l2 import get_history_content
+from parse_l2 import get_history_content, authorization_l2
+from settings import login_l2, password_l2, proxies
 
 
 def get_data_for_traum_point(connect, number_in_table: int):
@@ -59,7 +63,7 @@ def get_patient_pk(connect, number: str):
     return response.get('results')[0].get('pk')
 
 
-def get_history(connect, pk_number: int):
+def get_history(connect, pk_number: int, date_1: str, date_2: str):
 
     headers = {
         'Accept': 'application/json, text/plain, */*',
@@ -78,8 +82,8 @@ def get_history(connect, pk_number: int):
         'forHospSlave': False,
         'type': 3,
         'patient': pk_number,
-        'date_from': '01.07.2024',
-        'date_to': '01.08.2024',
+        'date_from': date_1,
+        'date_to': date_2,
     }
 
     response = connect.post(
@@ -91,15 +95,19 @@ def get_history(connect, pk_number: int):
     return response.get('directions')
 
 
-def get_ready_data(connect, number_from_table) -> dict:
+def get_ready_data(connect, number_from_table, date: str) -> dict:
     raw_data = get_data_for_traum_point(connect, number_from_table)
+
+    last_date = datetime.strptime(date, '%d.%m.%Y').date()
+    previous_date_date = last_date - timedelta(days=1)
+    previous_date = datetime.strftime(previous_date_date, '%d.%m.%Y')
+
     for data_item in raw_data:
         if 'Карта' in data_item:
             cart_number = data_item[1].split(' ')[0]
             pk = get_patient_pk(connect, cart_number)
-
-            for item in get_history(connect, pk):
-                if 'Консультация травматолога (первичный прием)' in item.get('researches'):
+            for item in get_history(connect, pk, date_1=previous_date, date_2=date):
+                if ('Консультация травматолога (первичный прием)' in item.get('researches') and 'Консультация травматолога (повторный прием)' not in item.get('researches')) or 'Консультация травматолога (повторный прием)' in item.get('researches'):
                     doctor = get_history_content(connect, item.get('pk')).get('researches')[0].get('whoConfirmed').split(',')[0]
                     fio_age = get_history_content(connect, item.get('pk')).get('patient').get('fio_age').split(' ')
                     surname = fio_age[0]
@@ -122,3 +130,17 @@ def get_ready_data(connect, number_from_table) -> dict:
                                 ready_data[field.get('title')] = field.get('value')
 
                     return ready_data
+
+
+# session = requests.Session()
+# session.proxies.update(proxies)
+# authorization_l2(session, login=login_l2, password=password_l2)
+#
+# pprint(get_ready_data(session, 3049102, '13.08.2024'))
+# test = get_data_for_traum_point(session, 3040917)
+# for data_item in test:
+#     if 'Карта' in data_item:
+#         cart_number = data_item[1].split(' ')[0]
+#         pk = get_patient_pk(session, cart_number)
+#         data = get_history(session, pk, '09.08.2024', '09.08.2024')
+#         pprint(get_history_content(session, data[0].get('pk')))

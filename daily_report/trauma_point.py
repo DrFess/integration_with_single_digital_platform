@@ -168,7 +168,8 @@ def save_visit(
         date_save: str,
         time_save: str,
         med_staff_fact_id: str,
-        diag_id:str,
+        service_type_id: str,
+        diag_id: str,
         diagnos_text: str,
 
 ):
@@ -226,7 +227,7 @@ def save_visit(
         'MedStaffFact_sid': 'null',
         'TreatmentClass_id': '2',
         'VizitActiveType_id': 'null',
-        'ServiceType_id': '6',
+        'ServiceType_id': service_type_id,  # для первичного '6', для повторного должно быть '4'
         'VizitClass_id': '1',
         'VizitType_id': '380101000000063',
         'MedOffice_id': 'null',
@@ -375,6 +376,7 @@ def add_initial_examination_service(
         exam_date: str,
         start_time: str,
         end_time: str,
+        usluga_complex_id: str
 ):
     """Добавляет услугу первичного приема травматологом"""
 
@@ -443,7 +445,7 @@ def add_initial_examination_service(
         'PolisDMS_id': 'null',
         'EvnPrescr_id': 'null',
         'UslugaCategory_id': '4',
-        'UslugaComplex_id': '206696',  # id первичного осмотра травматологом
+        'UslugaComplex_id': usluga_complex_id,  # 206696 - id первичного осмотра травматологом, 206697 - повторный осмотр травматологом
         'smoPersonFio': '',
         'smoComment': 'Укажите количество согласованных услуг и дату окончания согласования',
         'UslugaComplexTariff_id': 'null',

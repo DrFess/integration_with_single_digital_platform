@@ -1,5 +1,6 @@
 import os
 import json
+from pprint import pprint
 
 import requests
 
@@ -12,7 +13,7 @@ from settings import DOCTORS_LIST, login_l2, password_l2, proxies
 from single_digital_platform import entry, mkb
 
 
-path = '/Users/aleksejdegtarev/PycharmProjects/integration_with_single_digital_platform/daily_report/tables'
+path = '/Users/ilya/PycharmProjects/integration_with_single_digital_platform/daily_report/tables'
 
 duty_files = os.listdir(path)
 if len(duty_files) > 1:
@@ -24,15 +25,16 @@ else:
     for item in table_data:
         try:
             if item[0] is not None:
-                number = item[1].split(' ')[0]
-                doctor_surname = item[12].split(' ')[0]
+                number = item[0].split(' ')[0]
+                doctor_surname = item[7].split(' ')[0]
+                new_date = item[13].split(' ')[0]
 
                 """Блок получения данных из L2"""
                 session = requests.Session()
                 authorization_l2(session, login=login_l2, password=password_l2)
-                data_for_ecp = get_ready_data(session, number, duty_date)
+                data_for_ecp = get_ready_data(session, number, new_date)
                 session.close()
-                with open('/Users/aleksejdegtarev/PycharmProjects/integration_with_single_digital_platform/jsonS/doctors.json', 'r') as file:
+                with open('/Users/ilya/PycharmProjects/integration_with_single_digital_platform/jsonS/doctors.json', 'r') as file:
                     doctors = json.load(file)
 
                 """Блок выгрузки в ЕЦП"""

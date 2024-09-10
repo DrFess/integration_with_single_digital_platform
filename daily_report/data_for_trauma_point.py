@@ -98,15 +98,16 @@ def get_history(connect, pk_number: int, date_1: str, date_2: str):
 def get_ready_data(connect, number_from_table, date: str) -> dict:
     raw_data = get_data_for_traum_point(connect, number_from_table)
 
-    last_date = datetime.strptime(date, '%d.%m.%Y').date()
-    previous_date_date = last_date - timedelta(days=1)
+    format_date = '.'.join(date.split('-')[::-1])
+    last_date = datetime.strptime(format_date, '%d.%m.%Y').date()
+    previous_date_date = last_date + timedelta(days=30)
     previous_date = datetime.strftime(previous_date_date, '%d.%m.%Y')
 
     for data_item in raw_data:
         if 'Карта' in data_item:
             cart_number = data_item[1].split(' ')[0]
             pk = get_patient_pk(connect, cart_number)
-            for item in get_history(connect, pk, date_1=previous_date, date_2=date):
+            for item in get_history(connect, pk, date_1=format_date, date_2=previous_date):
                 if ('Консультация травматолога (первичный прием)' in item.get('researches') and 'Консультация травматолога (повторный прием)' not in item.get('researches')) or 'Консультация травматолога (повторный прием)' in item.get('researches'):
                     doctor = get_history_content(connect, item.get('pk')).get('researches')[0].get('whoConfirmed').split(',')[0]
                     fio_age = get_history_content(connect, item.get('pk')).get('patient').get('fio_age').split(' ')

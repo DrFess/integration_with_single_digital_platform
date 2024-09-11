@@ -107,30 +107,31 @@ def get_ready_data(connect, number_from_table, date: str) -> dict:
         if 'Карта' in data_item:
             cart_number = data_item[1].split(' ')[0]
             pk = get_patient_pk(connect, cart_number)
-            for item in get_history(connect, pk, date_1=format_date, date_2=previous_date):
-                if ('Консультация травматолога (первичный прием)' in item.get('researches') and 'Консультация травматолога (повторный прием)' not in item.get('researches')) or 'Консультация травматолога (повторный прием)' in item.get('researches'):
-                    doctor = get_history_content(connect, item.get('pk')).get('researches')[0].get('whoConfirmed').split(',')[0]
-                    fio_age = get_history_content(connect, item.get('pk')).get('patient').get('fio_age').split(' ')
-                    surname = fio_age[0]
-                    name = fio_age[1]
-                    patronymic = fio_age[2]
-                    age = fio_age[4]
+            if get_history(connect, pk, date_1=format_date, date_2=previous_date):
+                for item in get_history(connect, pk, date_1=format_date, date_2=previous_date):
+                    if ('Консультация травматолога (первичный прием)' in item.get('researches') and 'Консультация травматолога (повторный прием)' not in item.get('researches')) or 'Консультация травматолога (повторный прием)' in item.get('researches'):
+                        doctor = get_history_content(connect, item.get('pk')).get('researches')[0].get('whoConfirmed').split(',')[0]
+                        fio_age = get_history_content(connect, item.get('pk')).get('patient').get('fio_age').split(' ')
+                        surname = fio_age[0]
+                        name = fio_age[1]
+                        patronymic = fio_age[2]
+                        age = fio_age[4]
 
-                    ready_data = {
-                        'Врач': doctor,
-                        'Фамилия': surname,
-                        'Имя': name,
-                        'Отчество': patronymic,
-                        'Дата рождения': age
-                    }
+                        ready_data = {
+                            'Врач': doctor,
+                            'Фамилия': surname,
+                            'Имя': name,
+                            'Отчество': patronymic,
+                            'Дата рождения': age
+                        }
 
-                    case_raw_data = get_history_content(connect, item.get('pk')).get('researches')[0].get('research').get('groups')
-                    for part in case_raw_data:
-                        for field in part.get('fields'):
-                            if field.get('title') != '' and field.get('value') != '':
-                                ready_data[field.get('title')] = field.get('value')
+                        case_raw_data = get_history_content(connect, item.get('pk')).get('researches')[0].get('research').get('groups')
+                        for part in case_raw_data:
+                            for field in part.get('fields'):
+                                if field.get('title') != '' and field.get('value') != '':
+                                    ready_data[field.get('title')] = field.get('value')
 
-                    return ready_data
+                        return ready_data
 
 
 # session = requests.Session()

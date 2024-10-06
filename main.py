@@ -1,10 +1,13 @@
 import json
 from datetime import datetime
+from pprint import pprint
+
 import requests
 
 from add_operation import get_info_code_operation, save_all_oper_info, add_operation_member, save_oper_anesthesia, \
     create_empty_oper, update_oper
 from parse_l2 import extract_patient_data_from_L2, get_patients_from_table
+from read_xlsx import read_xlsx_history
 from settings import proxies
 from single_digital_platform import (
     entry,
@@ -28,15 +31,17 @@ with open('jsonS/doctors.json', 'r') as file:  # список словарей �
 session = requests.Session()  # создание сессии подключения
 session.proxies.update(proxies)
 
-for item in get_patients_from_table('Q3:Q43'):  # функция получает список номеров выписанных историй
+for item in read_xlsx_history('/Users/aleksejdegtarev/PycharmProjects/integration_with_single_digital_platform/ЖУРНАЛ ЭО II уровня 2024.xlsx'):  # функция получает список номеров выписанных историй
     try:
         data = extract_patient_data_from_L2(int(item))  # данные из истории в виде словаря
         doctor_surname = data.get('Лечащий врач')
 
         login = doctors.get(doctor_surname).get('login')  # получаем логин по фамилии лечащего врача из data
         password = doctors.get(doctor_surname).get('password')  # получаем пароль по фамилии лечащего врача из data
-        med_personal_id = doctors.get(doctor_surname).get('MedPersonal_id')  # получаем персональное id по фамилии лечащего врача из data
-        med_staff_fact_id = doctors.get(doctor_surname).get('MedStaffFact_id_stac')  # получаем рабочее id по фамилии лечащего врача из data
+        med_personal_id = doctors.get(doctor_surname).get(
+            'MedPersonal_id')  # получаем персональное id по фамилии лечащего врача из data
+        med_staff_fact_id = doctors.get(doctor_surname).get(
+            'MedStaffFact_id_stac')  # получаем рабочее id по фамилии лечащего врача из data
 
         authorization = entry(session, login=login, password=password)  # авторизация в ЕЦП с данными лечащего врача
 
@@ -51,10 +56,11 @@ for item in get_patients_from_table('Q3:Q43'):  # функция получае�
 
         diagnosis_id = mkb(session, letter=data.get('Основной диагноз по МКБ'))[0]['Diag_id']  # id диагноза по коду МКБ
 
-        ksg_and_koef = get_KSG_KOEF(  # расчёт КСГ по сроку лечения и коду МКБ -> нужно добавить метод для расчёта по операции
+        ksg_and_koef = get_KSG_KOEF(
+            # расчёт КСГ по сроку лечения и коду МКБ -> нужно добавить метод для расчёта по операции
             session,
-            date_start=data.get('Дата поступления'),
-            date_end=data.get('Дата выписки'),
+            date_start='02.09.2024',
+            date_end='04.09.2024',
             patient_id=patient,
             diagnosis_id=diagnosis_id
         )
@@ -67,8 +73,8 @@ for item in get_patients_from_table('Q3:Q43'):  # функция получае�
                     patient_id=patient,
                     patient_person_evn_id=search.get('data')[0]['PersonEvn_id'],
                     patient_server_id=search.get('data')[0]['Server_id'],
-                    date_start=data.get('Дата поступления'),
-                    time_start=data.get('Время поступления'),
+                    date_start='02.09.2024',
+                    time_start='10:00',
                     numcard=evn_number.get('EvnPS_NumCard'),
                     type_hospitalization='1',
                     date_of_referral='',
@@ -84,7 +90,7 @@ for item in get_patients_from_table('Q3:Q43'):  # функция получае�
                     patient_id=patient,
                     patient_person_evn_id=search.get('data')[0]['PersonEvn_id'],
                     patient_server_id=search.get('data')[0]['Server_id'],
-                    date_start=data.get('Дата поступления'),
+                    date_start='02.09.2024',
                     time_start=data.get('Время поступления'),
                     numcard=evn_number.get('EvnPS_NumCard'),
                     type_hospitalization='2',
@@ -121,10 +127,10 @@ for item in get_patients_from_table('Q3:Q43'):  # функция получае�
                     person_id=patient,
                     personEvn_id=search.get('data')[0].get('PersonEvn_id'),
                     server_id=search.get('data')[0].get('Server_id'),
-                    start_date=data.get('Протоколы операций')[0].get('Дата проведения'),
-                    start_time=data.get('Протоколы операций')[0].get('Время начала'),
-                    end_date=data.get('Протоколы операций')[0].get('Дата проведения'),
-                    end_time=data.get('Протоколы операций')[0].get('Время окончания'),
+                    start_date='03.09.2024',
+                    start_time='10:00',
+                    end_date='03.09.2024',
+                    end_time='10:40',
                     medStaffFact_id=med_staff_fact_id,
                     evn_id='0',
                     evnUslugaOper_id='0',
@@ -143,7 +149,7 @@ for item in get_patients_from_table('Q3:Q43'):  # функция получае�
                     surgType_id='1'
                 )
                 anesthesiolog = data.get('Протоколы операций')[0].get('Анестезиолог')
-                with open('jsonS/empoyees.json', 'r') as file:
+                with open('/Users/aleksejdegtarev/PycharmProjects/integration_with_single_digital_platform/jsonS/empoyees.json', 'r') as file:
                     doctors_list = json.load(file)
                 for doctor in doctors_list:
                     if anesthesiolog == doctor.get('MedPersonal_Fin') and doctor.get(
@@ -204,10 +210,11 @@ for item in get_patients_from_table('Q3:Q43'):  # функция получае�
                         implant_name=implant_title
                     )
 
-            fourth_step = save_data(  # функция переводит пациента в выписанные
+            """Блок выписки истории"""
+            fourth_step = save_data(
                 session,
-                date_start=data.get('Дата поступления'),
-                date_end=data.get('Дата выписки'),
+                date_start='02.09.2024',
+                date_end='04.09.2024',
                 ksg_val=ksg_and_koef['KSG'],
                 ksg_mes_tid=ksg_and_koef['Mes_tid'],
                 ksg_mestarif_id=ksg_and_koef['MesTariff_id'],
@@ -216,7 +223,7 @@ for item in get_patients_from_table('Q3:Q43'):  # функция получае�
                 patient_id=search['data'][0]['Person_id'],
                 patient_person_evn_id=search['data'][0]['PersonEvn_id'],
                 patient_server_id=search['data'][0]['Server_id'],
-                time_start=data.get('Время поступления'),
+                time_start='10:00',
                 time_end=data.get('Время выписки'),
                 evn_section_id=evn_card['EvnSection_id'],
                 evn_section_pid=evn_card['EvnPS_id'],
@@ -225,7 +232,8 @@ for item in get_patients_from_table('Q3:Q43'):  # функция получае�
                 med_staff_fact_id=med_staff_fact_id
             )
 
-            template = create_template(session, evn_card['EvnSection_id'], med_staff_fact_id=med_staff_fact_id)  # создаёт пустой шаблон выписного эпикриза по id шаблона
+            template = create_template(session, evn_card['EvnSection_id'],
+                                       med_staff_fact_id=med_staff_fact_id)  # создаёт пустой шаблон выписного эпикриза по id шаблона
 
             update_research_evn_template(  # обновляет исследованиями данные шаблона выписного эпикриза
                 session,

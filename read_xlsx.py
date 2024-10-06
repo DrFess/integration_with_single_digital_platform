@@ -1,4 +1,5 @@
 import json
+from pprint import pprint
 
 import requests
 from openpyxl import load_workbook
@@ -150,3 +151,29 @@ def cell_color_edit(path: str, cell_number: str):
     cell.fill = fill
     cell_department.fill = fill
     workbook.save(path)
+
+
+def read_xlsx_history(path: str) -> list:
+    """Получение данных из суточного отчета"""
+    workbook = load_workbook(path)
+    data = []
+    # for sheet in workbook.worksheets[:4]:
+    #     for row in sheet.values:
+    #         if row[0] is None or 'Медицинская карта стационарного больного' in row[0]:
+    #             pass
+    #         else:
+    #             split_list = row[0].split(' ')
+    #             last_element = split_list[-1].lstrip('№')
+    #             data.append(last_element)
+    # return data
+    for row in workbook.worksheets[2].values:
+        if row[0] is None or 'Медицинская карта стационарного больного' in row[0]:
+            pass
+        else:
+            split_list = row[0].split(' ')
+            last_element = split_list[-1].lstrip('№')
+            data.append(last_element)
+    return data
+
+
+# print(read_xlsx_history('/Users/aleksejdegtarev/PycharmProjects/integration_with_single_digital_platform/ЖУРНАЛ ЭО II уровня 2024.xlsx'))

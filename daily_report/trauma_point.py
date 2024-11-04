@@ -103,6 +103,8 @@ def save_first_data_vizit(
         date_pl: str,
         time_pl: str,
         evn_pl_number: str,
+        lpu_section_id: str,
+        vizit_type_id: str
 ):
     """Первые данные обращения"""
     headers = {
@@ -132,7 +134,7 @@ def save_first_data_vizit(
         'action': 'addEvnPL',
         'allowCreateEmptyEvnDoc': '2',
         'MedStaffFact_id': med_staff_fact_id,
-        'LpuSection_id': '380101000015788',  # const
+        'LpuSection_id': lpu_section_id,  # const
         'MedPersonal_id': med_personal_id,
         'TimetableGraf_id': '',
         'EvnDirection_id': '',
@@ -149,7 +151,7 @@ def save_first_data_vizit(
         'EvnVizitPL_setTime': time_pl,  # hh:mm
         'PayType_id': '380101000000021',  # const
         'ServiceType_id': '0',
-        'VizitType_id': '380101000000016',  # const?
+        'VizitType_id': vizit_type_id,  # const?
         'EvnPL_NumCard': evn_pl_number,
         'EvnPL_IsWithoutDirection': '1',
         'isAutoCreate': '1',
@@ -171,7 +173,9 @@ def save_visit(
         service_type_id: str,
         diag_id: str,
         diagnos_text: str,
-
+        lpu_section_id: str,
+        vizit_type_id: str,
+        lpu_section_profile_id: str
 ):
     """Сохраняет все данные посещения"""
 
@@ -220,7 +224,7 @@ def save_visit(
         'EvnVizitPL_setDate': date_save,
         'EvnVizitPL_setTime': time_save,
         'EvnVizitPL_IsPrimaryVizitAnnual': 'null',
-        'LpuSection_id': '380101000015788',
+        'LpuSection_id': lpu_section_id,  # 380101000015788 - травма, 380101000015715 - ЛОР
         'MedStaffFact_id': med_staff_fact_id,
         'MedStaffFact_id2': 'null',
         'MedStaffFact_id3': 'null',
@@ -229,7 +233,7 @@ def save_visit(
         'VizitActiveType_id': 'null',
         'ServiceType_id': service_type_id,  # для первичного '6', для повторного должно быть '4'
         'VizitClass_id': '1',
-        'VizitType_id': '380101000000063',
+        'VizitType_id': vizit_type_id,  # 380101000000063 - травма, 380101000000016 - заболевание
         'MedOffice_id': 'null',
         'RiskLevel_id': 'null',
         'WellnessCenterAgeGroups_id': 'null',
@@ -241,8 +245,8 @@ def save_visit(
         'DispClass_id': 'null',
         'EvnPLDisp_id': '',
         'PersonDisp_id': '',
-        'LpuSectionProfile_id': '380101000000301',
-        'PayType_id': '380101000000021',
+        'LpuSectionProfile_id': lpu_section_profile_id,  # 380101000000301 - травматология, 380101000000021 - ЛОР
+        'PayType_id': '380101000000021',  # ОМС
         'PayContract_id': 'null',
         'PolisDMS_id': 'null',
         'ProfGoal_id': 'null',
@@ -283,6 +287,7 @@ def create_template(
         evn_vizit_pl_id: str,  # из first_save
         med_personal_id: str,
         med_staff_fact_id: str,
+        lpu_section_id: str
 ):
     """Получает номер шаблона текстовой части протокола (EvnXml_id)"""
     headers = {
@@ -309,7 +314,7 @@ def create_template(
         'Person_id': person_id,
         'Evn_id': evn_vizit_pl_id,
         'EvnClass_id': '11',
-        'LpuSection_id': '380101000015788',
+        'LpuSection_id': lpu_section_id,
         'MedPersonal_id': med_personal_id,
         'MedStaffFact_id': med_staff_fact_id,
         'MedService_id': '',
@@ -376,7 +381,9 @@ def add_initial_examination_service(
         exam_date: str,
         start_time: str,
         end_time: str,
-        usluga_complex_id: str
+        usluga_complex_id: str,
+        lpu_section_id: str,
+        lpu_section_profile_id: str
 ):
     """Добавляет услугу первичного приема травматологом"""
 
@@ -432,8 +439,8 @@ def add_initial_examination_service(
         'UslugaExecutionType_id': 'null',
         'UslugaExecutionReason_id': 'null',
         'UslugaPlace_id': '1',
-        'LpuSection_uid': '380101000015788',  # const
-        'LpuSectionProfile_id': '380101000000301',  # const
+        'LpuSection_uid': lpu_section_id,  # const
+        'LpuSectionProfile_id': lpu_section_profile_id,  # const
         'Lpu_uid': 'null',
         'Org_uid': 'null',
         'MedSpecOms_id': 'null',
@@ -465,6 +472,7 @@ def finished(
         diag_id: str,
         text_diag: str,
         diag_w: str,
+        result_class_id: str
 ):
     """Закрывает случай обращения"""
     headers = {
@@ -495,7 +503,7 @@ def finished(
         'EvnPL_id': evn_pl_id,
         'IsDeleteSpecificCVI': '1',
         'EvnPL_IsSurveyRefuse': 'null',
-        'ResultClass_id': '380101000000001',
+        'ResultClass_id': result_class_id,
         'InterruptLeaveType_id': 'null',
         'ResultDeseaseType_id': '380101000000028',
         'EvnPL_UKL': '1',
@@ -514,6 +522,190 @@ def finished(
         'LeaveType_fedid': 'null',
         'ResultDeseaseType_fedid': 'null',
         'EvnPL_isMseDirected': '1',
+    }
+
+    response = connect.post('https://ecp38.is-mis.ru/', params=params, headers=headers, data=data).json()
+    return response
+
+
+def get_operation_id(connect, date_mls: str, date: str, evn_usluga_pid: str, lpu_section_pid: str, operation_code: str):
+    """Запрос на получение UslugaComplex_id по коду операции"""
+
+    headers = {
+        'accept': '*/*',
+        'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
+        'dnt': '1',
+        'priority': 'u=1, i',
+        'referer': 'https://ecp38.is-mis.ru/?c=promed',
+        'sec-ch-ua': '"Chromium";v="130", "Google Chrome";v="130", "Not?A_Brand";v="99"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"macOS"',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-origin',
+        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
+        'x-requested-with': 'XMLHttpRequest',
+    }
+
+    params = {
+        'c': 'Usluga',
+        'm': 'loadNewUslugaComplexList',
+        '_dc': date_mls,  # количество миллисекунд
+        'query': operation_code,  # только латинская литера
+        'UslugaComplex_Date': date,
+        'ucp': '',
+        'EvnUsluga_pid': evn_usluga_pid,  # EvnVizitPL_id
+        'UslugaCategory_id': '4',
+        'to': 'EvnUslugaOper',
+        'DispClass_id': '',
+        'dispOnly': '',
+        'nonDispOnly': '1',
+        'LpuSection_pid': lpu_section_pid,  # lpu_section_id
+        'uslugaCategoryList': '["gost2011"]',
+        'Person_id': '0',
+        'PersonAge': '0',
+        'PayType_id': '0',
+        'allowedUslugaComplexAttributeList': '["oper"]',
+        'allowedUslugaComplexAttributeMethod': 'or',
+        'disallowedUslugaComplexAttributeList': '',
+        'allowMorbusVizitCodesGroup88': '0',
+        'allowMorbusVizitOnly': '0',
+        'allowNonMorbusVizitOnly': '0',
+        'ignoreUslugaComplexDate': '0',
+        'Mes_id': '',
+        'LpuLevel_Code': '',
+        'uslugaComplexCodeList': '',
+        'UslugaComplex_2011id': '',
+        'withoutPackage': '1',
+        'page': '1',
+        'start': '0',
+        'limit': '25',
+    }
+
+    response = connect.get('https://ecp38.is-mis.ru/', params=params, headers=headers).json()
+    return response  # .get('UslugaComplex_id')
+
+
+def add_operation_service(
+        connect,
+        med_personal_id: str,
+        evn_id: str,
+        person_id: str,
+        person_evn_id: str,
+        evn_usluga_oper_pid: str,
+        oper_start_date: str,
+        oper_end_date: str,
+        oper_start_time: str,
+        oper_end_time: str,
+        lpu_section_uid: str,
+        lpu_section_profile_id: str,
+        med_staff_fact_id: str,
+        usluga_complex_id: str
+):
+    """Запрос на добавление услуги - операции"""
+
+    headers = {
+        'accept': '*/*',
+        'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
+        'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'dnt': '1',
+        'origin': 'https://ecp38.is-mis.ru',
+        'priority': 'u=1, i',
+        'referer': 'https://ecp38.is-mis.ru/?c=promed',
+        'sec-ch-ua': '"Chromium";v="130", "Google Chrome";v="130", "Not?A_Brand";v="99"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"macOS"',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-origin',
+        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
+        'x-requested-with': 'XMLHttpRequest',
+    }
+
+    params = {
+        'c': 'EvnUsluga',
+        'm': 'saveEvnUslugaOper',
+    }
+
+    data = {
+        'MedPersonal_id': med_personal_id,
+        'MedPersonal_sid': '',
+        'ignorePaidCheck': '',
+        'ignoreParentEvnDateCheck': '0',
+        'ignoreBallonBegCheck': '0',
+        'ignoreCKVEndCheck': '0',
+        'isPaidUsluga': 'false',
+        'EvnUslugaComplexPlanLink_id': '',
+        'EvnUslugaOper_Price': '0',
+        'EvnUslugaOper_Summa': '0.00',
+        'PayDocEvnPersonalAgreementsLink_paguid': '',
+        'EvnUslugaOper_Kolvo': '1',
+        'accessType': '',
+        'XmlTemplate_id': '0',
+        'EvnUslugaOper_id': '',
+        'EvnUslugaOper_rid': '0',
+        'Server_id': '38',
+        'Morbus_id': '0',
+        'IsCardioCheck': '0',
+        'Evn_id': evn_id,  # EvnVizitPL_id
+        'AnesthesiaClass': '0',
+        'EvnDirection_id': '',
+        'Person_id': person_id,
+        'PersonEvn_id': person_evn_id,
+        'EvnUslugaOper_pid': evn_usluga_oper_pid,  # EvnVizitPL_id
+        'EvnUslugaOper_setDate': oper_start_date,
+        'EvnUslugaOper_setTime': oper_start_time,
+        'EvnUslugaOper_disDate': oper_end_date,
+        'EvnUslugaOper_disTime': oper_end_time,
+        'UslugaExecutionType_id': 'null',
+        'UslugaExecutionReason_id': 'null',
+        'UslugaPlace_id': '1',
+        'LpuSection_uid': lpu_section_uid,
+        'LpuSectionProfile_id': lpu_section_profile_id,
+        'Lpu_uid': 'null',
+        'Org_uid': 'null',
+        'MedSpecOms_id': 'null',
+        'MedStaffFact_id': med_staff_fact_id,
+        'MedStaffFact_sid': 'null',
+        'PayType_id': '380101000000021',
+        'PayContract_id': 'null',
+        'PersonalAgreements_id': '',
+        'PolisDMS_id': 'null',
+        'EvnPrescr_id': 'null',
+        'UslugaCategory_id': '4',
+        'UslugaComplex_id': usluga_complex_id,
+        'BeamLoad_RadiationDose': '',
+        'BeamLoadUnits_id': 'null',
+        'smoPersonFio': '',
+        'smoComment': 'Укажите количество согласованных услуг и дату окончания согласования',
+        'UslugaComplexTariff_id': 'null',
+        'DiagSetClass_id': 'null',
+        'Diag_id': 'null',
+        'EvnUslugaOper_BallonBegDate': '',
+        'EvnUslugaOper_BallonBegTime': '',
+        'EvnUslugaOper_CKVEndDate': '',
+        'EvnUslugaOper_CKVEndTime': '',
+        'OperType_id': '3',
+        'OperDiff_id': '1',
+        'TreatmentConditionsType_id': 'null',
+        'EvnUslugaOper_IsVMT': '1',
+        'EvnUslugaOper_IsOpenHeart': '1',
+        'EvnUslugaOper_IsMicrSurg': '1',
+        'EvnUslugaOper_IsArtCirc': '1',
+        'EvnUslugaOper_IsEndoskop': '1',
+        'EvnUslugaOper_IsKriogen': '1',
+        'EvnUslugaOper_IsLazer': '1',
+        'EvnUslugaOper_IsRadGraf': '1',
+        'CaesarianPhaseType_id': 'null',
+        'EvnUslugaOper_WaterlessPeriod': '',
+        'Okei_wid': 'null',
+        'CaesarianIncisionType_id': 'null',
+        'RumenLocalType_id': 'null',
+        'EvnUslugaOper_BloodLoss': '',
+        'Okei_bid': 'null',
+        'EvnUslugaOper_deadDate': '',
+        'EvnUslugaOper_deadTime': '',
+        'EvnUslugaOnkoSurg_id': 'null',
     }
 
     response = connect.post('https://ecp38.is-mis.ru/', params=params, headers=headers, data=data).json()

@@ -16,9 +16,20 @@ def read_xlsx(path: str) -> list:
     raw_data = workbook.worksheets[0]
     data = []
     for row in raw_data.values:
-        if row[2] and row[2] != 'Пациент':
+        if row[4]:
             data.append(row)
     return data
+
+
+def find_index(data_in_table):
+    """Поиск номера колонки в таблице"""
+    param = 'Направление'
+    column_number = None
+    for row in data_in_table:
+        for index, item in enumerate(row):
+            if param == item:
+                column_number = index
+    return column_number
 
 
 def search_diag_id(diag_mkb: str) -> str:
@@ -135,7 +146,7 @@ def cell_color_edit(path: str, cell_number: str):
     workbook = load_workbook(path)
     worksheet = workbook.worksheets[0]
     cell = worksheet[cell_number]
-    cell_department = worksheet[cell_number.replace('X', 'A')]
+    cell_department = worksheet[cell_number.replace('AJ', 'A')]
     ecp_data = cell.value.split('/')[0].lstrip('=')
     fact_data = cell.value.split('/')[1]
     ecp_cell = worksheet[ecp_data]

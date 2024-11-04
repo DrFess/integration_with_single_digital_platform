@@ -108,40 +108,39 @@ def get_ready_data(connect, number_from_table, date: str) -> dict:
             pk = get_patient_pk(connect, cart_number)
             if get_history(connect, pk, date_1=date, date_2=previous_date):
                 for item in get_history(connect, pk, date_1=date, date_2=previous_date):
-                    if ('Консультация травматолога (первичный прием)' in item.get('researches') and 'Консультация травматолога (повторный прием)' not in item.get('researches')) or 'Консультация травматолога (повторный прием)' in item.get('researches'):
-                        doctor = get_history_content(connect, item.get('pk')).get('researches')[0].get('whoConfirmed').split(',')[0]
-                        fio_age = get_history_content(connect, item.get('pk')).get('patient').get('fio_age').split(' ')
-                        surname = fio_age[0]
-                        name = fio_age[1]
-                        patronymic = fio_age[2]
-                        age = fio_age[4]
+                    if (('Консультация травматолога (первичный прием)' in item.get('researches')
+                         and 'Консультация травматолога (повторный прием)' not in item.get('researches'))
+                            or 'Консультация травматолога (повторный прием)' in item.get('researches'))\
+                            or 'Консультация врача-оториноларинголога' in item.get('researches'):
+                        case_raw_data = get_history_content(connect, item.get('pk'))
+
+                        doctor = case_raw_data.get('researches')[0].get('whoConfirmed').split(',')[0]
+                        surname = case_raw_data.get('patient').get('fio_age').split(' ')[0]
+                        name = case_raw_data.get('patient').get('fio_age').split(' ')[1]
+                        patronymic = case_raw_data.get('patient').get('fio_age').split(' ')[2]
+                        age = case_raw_data.get('patient').get('fio_age').split(' ')[4]
 
                         ready_data = {
+                            'Протокол': item.get('researches'),
                             'Врач': doctor,
                             'Фамилия': surname,
                             'Имя': name,
                             'Отчество': patronymic,
                             'Дата рождения': age
                         }
-
-                        case_raw_data = get_history_content(connect, item.get('pk')).get('researches')[0].get('research').get('groups')
-                        for part in case_raw_data:
+                        for part in case_raw_data.get('researches')[0].get('research').get('groups'):
                             for field in part.get('fields'):
-                                if field.get('title') != '' and field.get('value') != '':
+                                if field.get('title') == 'Код основного диагноза по МКБ-10 ':
+                                    ready_data['Диагноз по МКБ'] = field.get('value')
+                                elif field.get('title') != '' and field.get('value') != '':
                                     ready_data[field.get('title')] = field.get('value')
 
                         return ready_data
 
 
-# session = requests.Session()
-# session.proxies.update(proxies)
-# authorization_l2(session, login=login_l2, password=password_l2)
-#
-# pprint(get_ready_data(session, 3049102, '13.08.2024'))
-# test = get_data_for_traum_point(session, 3040917)
-# for data_item in test:
-#     if 'Карта' in data_item:
-#         cart_number = data_item[1].split(' ')[0]
-#         pk = get_patient_pk(session, cart_number)
-#         data = get_history(session, pk, '09.08.2024', '09.08.2024')
-#         pprint(get_history_content(session, data[0].get('pk')))
+def create_text(data_dict: dict, date: str) -> str:
+    text = f'Дата осмотра: {date};\n'
+    for item in data_dict:
+        if item not in 'Протокол Врач Фамилия Имя Отчество Дата рождения':
+            text += f'{item}: {data_dict.get(item)}\n'
+    return text

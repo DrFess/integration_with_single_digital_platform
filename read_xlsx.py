@@ -146,7 +146,7 @@ def cell_color_edit(path: str, cell_number: str):
     workbook = load_workbook(path)
     worksheet = workbook.worksheets[0]
     cell = worksheet[cell_number]
-    cell_department = worksheet[cell_number.replace('AJ', 'A')]
+    cell_department = worksheet[cell_number.replace('AR', 'A')]
     ecp_data = cell.value.split('/')[0].lstrip('=')
     fact_data = cell.value.split('/')[1]
     ecp_cell = worksheet[ecp_data]

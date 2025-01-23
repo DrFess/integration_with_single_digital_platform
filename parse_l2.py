@@ -45,7 +45,7 @@ def authorization_l2(connect, login, password):
     }
 
     response = connect.post('http://192.168.10.161/api/users/auth', headers=headers, json=json_data, verify=False)
-    return response.status_code, response.json()
+    return response.status_code, response.json(), response.cookies
 
 
 def get_all_favorites(connect):
